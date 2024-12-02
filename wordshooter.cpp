@@ -7,9 +7,8 @@
 //============================================================================
 #ifndef WORD_SHOOTER_CPP
 #define WORD_SHOOTER_CPP
-
-//#include <GL/gl.h>
-//#include <GL/glut.h>
+#include <GL/gl.h>
+#include <GL/glut.h>
 #include <iostream>
 #include<string>
 #include<cmath>
@@ -22,8 +21,11 @@ using namespace std;
 #define FPS 10
 
 string * dictionary;
-int dictionarysize = 370099;
-#define KEY_ESC 27 // A
+int dictionarysize = 369646;
+#define KEY_ESC 27 // 
+//#define KEY_ESC 32
+
+
 
 // 20,30,30
 const int bradius = 30; // ball radius in pixels...
@@ -49,23 +51,102 @@ string tnames[] = { "a.bmp", "b.bmp", "c.bmp", "d.bmp", "e.bmp", "f.bmp", "g.bmp
 "k.bmp", "l.bmp", "m.bmp", "n.bmp", "o.bmp", "p.bmp", "q.bmp", "r.bmp", "s.bmp", "t.bmp", "u.bmp", "v.bmp", "w.bmp",
 "x.bmp", "y.bmp", "z.bmp" };
 GLuint mtid[nalphabets];
-int awidth = 60, aheight = 60; // 60x60 pixels cookies...
+int awidth = 60, aheight = 60; // 60x60 pixels bubbles...
 
+const int shotSpeed = 10;   
+int startdisplay=0;
+int timee=12000;
+int loc1y=18;
+int loc1x=465;
+float loc2y=18;//
+float loc2x=465;//
+int loc3y=18;
+int loc3x=465;
+int loc4y=18;
+int loc4x=465;
+int loc5y=18;
+int loc5x=465;
+int loc6y=18;
+int loc6x=465;
+int loc7y=18;
+int loc7x=465;
+int loc8y=18;
+int loc8x=465;
+int loc9y=18;
+int loc9x=465;
+int loc10y=18;
+int loc10x=465;
+int loc11y=18;
+int loc11x=465;
+int loc12y=18;
+int loc12x=465;
+int loc13y=18;
+int loc13x=465;
+int loc14y=18;
+int loc14x=465;
+int loc15y=18;
+int loc15x=465;
+int loc16y=18;
+int loc16x=465;
+int loc17y=18;
+int loc17x=465;
+int loc18y=18;
+int loc18x=465;
+int loc19y=18;
+int loc19x=465;
+int loc20y=18;
+int loc20x=465;
+int loc21y=18;
+int loc21x=465;
+int loc22y=18;
+int loc22x=465;
+int loc23y=18;
+int loc23x=465;
+int loc24y=18;
+int loc24x=465;
+int loc25y=18;
+int loc25x=465;
+int loc26y=18;
+int loc26x=465;
+int loc27y=18;
+int loc27x=465;
+float locx=18;
+float locy=465;
 
-//USED THIS CODE FOR WRITING THE IMAGES TO .bin FILE
+const int NUM_COUNT = 50;
+int num[NUM_COUNT]; 
+
+float shotx=-1;
+float shoty=-1;
+bool bubblemoving=false;
+float speed=5.0f;
+
+bool boundarycheck;
+int clickcount=0;
+float dx=0;
+float dy=0;
+float Distance=0;
+const int NUM_ROWS = 2; 
+const int NUM_COLS = 15; 
+int turn=0;
+char topalphabets[NUM_ROWS][NUM_COLS] = {
+    {'A', 'E', 'D', 'C', 'B', 'N', 'J', 'Z', 'G', 'L', 'Q', 'M', 'B', 'K','N'},
+    {'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', 'B','M'}
+};
+alphabets charToAlphabet(char c){
+    if(c>='A'&&c<='Z'){
+      return static_cast<alphabets>(c - 'A'); 
+    }
+    return static_cast<alphabets>(-1); 
+}
+
 void RegisterTextures_Write()
-//Function is used to load the textures from the
-// files and display
 {
-	// allocate a texture name
 	glGenTextures(nalphabets, tid);
 	vector<unsigned char> data;
 	ofstream ofile("image-data.bin", ios::binary | ios::out);
-	// now load each cookies data...
 
 	for (int i = 0; i < nalphabets; ++i) {
-
-		// Read current cookie
 
 		ReadImage(tnames[i], data);
 		if (i == 0) {
@@ -116,7 +197,7 @@ void RegisterTextures()
 		cout << " Couldn't Read the Image Data file ";
 		//exit(-1);
 	}
-	// now load each cookies data...
+	// now load each bubbles data...
 	int length;
 	ifile.read((char*)&length, sizeof(int));
 	data.resize(length, 0);
@@ -168,7 +249,8 @@ void DrawAlphabet(const alphabets &cname, int sx, int sy, int cwidth = 60,
 	float fwidth = (float)cwidth / width * 2, fheight = (float)cheight
 		/ height * 2;
 	float fx = (float)sx / width * 2 - 1, fy = (float)sy / height * 2 - 1;
-
+        
+      
 	glPushMatrix();
 	glEnable(GL_TEXTURE_2D);
 	glBindTexture(GL_TEXTURE_2D, mtid[cname]);
@@ -226,7 +308,7 @@ void DrawShooter(int sx, int sy, int cwidth = 60, int cheight = 60)
 	glColor4f(1, 1, 1, 1);
 
 	//	glBindTexture(GL_TEXTURE_2D, 0);
-
+       // DrawAlphabet(AL_A,430, 0+ cheight, 55, 55);
 	glDisable(GL_TEXTURE_2D);
 	glPopMatrix();
 
@@ -235,43 +317,922 @@ void DrawShooter(int sx, int sy, int cwidth = 60, int cheight = 60)
 /*
 * Main Canvas drawing function.
 * */
+void MoveBubble(int shotx,int shoty,int &locx,int &locy){
+ // float dx=0;
+ // float dy=0;
+    if(shotx!=-1&&shoty!=-1){
+        // dx=shotx-locx;
+        // dy=shoty-locy;
+        float distance=sqrt(dx*dx+dy*dy);
+        if(distance>1.0f&&bubblemoving){
+           float dirx=dx/distance;
+           float diry=dy/distance;
+            locx+=dirx*2; 
+            locy+=diry*2; 
+            }
+            locx+=dx;
+            locy+=dy;
+           
+            if(locx>870){
+              locx=870;
+              dx=-dx;
+              //bubblemoving=false;
+              //dx=-shotx+locx;
+              //dy=shoty-locy;
+              
+              //float slope=dy/dx;
+              //float newdistance=sqrt(dx*dx+dy*dy);
+              //float dirx=dx/newdistance;
+              //float diry=dy/newdistance;
+              
+              //locx+=dirx*15;
+              //locy+=diry*15;
+            }
+            if(locx<0){
+              locx=0;
+              dx=-dx;
+            }
+            if(locy>660){
+              locy=660;
+              dy=-dy;
+            }
+        
+    }
+}
+void generateRandomAlphabets(char topalphabets[NUM_ROWS][NUM_COLS]) {
+    for (int i = 0; i < NUM_ROWS; i++) {
+        for (int j = 0; j < NUM_COLS; j++) {
+            // Generate a random index from 0 to 25
+            int randomIndex = rand() % 26;
+            // Convert index to corresponding alphabet character
+            topalphabets[i][j] = 'A' + randomIndex; // 'A' + 0 = 'A', 'A' + 1 = 'B', etc.
+        }
+    }
+}
+ bool reachedtarget(){
+    return locy<=430; 
+    }
+            
 void DisplayFunction() {
 	// set the background color using function glClearColor.
 	// to change the background play with the red, green and blue values below.
 	// Note that r, g and b values must be in the range [0,1] where 0 means dim red and 1 means pure red and so on.
 	//#if 0
+	srand(time(0));
 	glClearColor(1/*Red Component*/, 1.0/*Green Component*/,
 		1.0/*Blue Component*/, 0 /*Alpha component*/); // Red==Green==Blue==1 --> White Colour
 	glClear(GL_COLOR_BUFFER_BIT); //Update the colors
+	turn++;
+ 
+   /* DrawAlphabet((alphabets)num[0], 10, height - 100, awidth, aheight);  // A
+    DrawAlphabet((alphabets)num[4], 70, height - 100, awidth, aheight); // E
+    DrawAlphabet((alphabets)num[3], 130, height - 100, awidth, aheight); // D
+    DrawAlphabet((alphabets)num[17],190, height - 100, awidth, aheight); // C
+    DrawAlphabet((alphabets)num[1],250, height - 100, awidth, aheight); // B
+    DrawAlphabet((alphabets)num[13],310, height - 100, awidth, aheight); // N
+    DrawAlphabet((alphabets)num[9],370, height - 100, awidth, aheight); // J
+    DrawAlphabet((alphabets)num[25],430, height - 100, awidth, aheight); // 
+    DrawAlphabet((alphabets)num[6],488, height - 100, awidth, aheight); // G
+    DrawAlphabet((alphabets)num[11],545, height - 100, awidth, aheight); // L
+    DrawAlphabet((alphabets)num[16],605, height - 100, awidth, aheight); // Q
+    DrawAlphabet((alphabets)num[12], 665, height - 100, awidth, aheight); // M
+    DrawAlphabet((alphabets)num[15], 725, height - 100, awidth, aheight); // B
+    DrawAlphabet((alphabets)num[21], 785, height - 100, awidth, aheight);
+    DrawAlphabet((alphabets)num[2], 845, height - 100, awidth, aheight);
+    
+    
+    DrawAlphabet((alphabets)num[14], 10, height - 160, awidth, aheight);  // N
+    DrawAlphabet((alphabets)num[19], 70, height - 160, awidth, aheight);  // O
+    DrawAlphabet((alphabets)num[22], 130, height - 160, awidth, aheight); // P
+    DrawAlphabet((alphabets)num[24], 190, height - 160, awidth, aheight); // Q
+    DrawAlphabet((alphabets)num[20], 250, height - 160, awidth, aheight); // R
+    DrawAlphabet((alphabets)num[10], 310, height - 160, awidth, aheight); // S
+    DrawAlphabet((alphabets)num[2], 370, height - 160, awidth, aheight); // T
+    DrawAlphabet((alphabets)num[23], 430, height - 160, awidth, aheight); // U
+    DrawAlphabet((alphabets)num[21], 488, height - 160, awidth, aheight); // V
+    DrawAlphabet((alphabets)num[16], 545, height - 160, awidth, aheight); // W
+    DrawAlphabet((alphabets)num[5], 605, height - 160, awidth, aheight); // X
+    DrawAlphabet((alphabets)num[7], 665, height - 160, awidth, aheight); // Y
+    DrawAlphabet((alphabets)num[8], 725, height - 160, awidth, aheight); // Z
+    DrawAlphabet((alphabets)num[1], 785, height - 160, awidth, aheight);
+    DrawAlphabet((alphabets)num[12], 845, height - 160, awidth, aheight);*/
+    if(turn==1){
+    generateRandomAlphabets(topalphabets);
+    }
+    for (int col = 0; col < NUM_COLS; ++col) {
+    DrawAlphabet(charToAlphabet(topalphabets[0][col]), 10 + col * 60, height - 100, awidth, aheight); // First row
+}
 
-	//write your drawing commands here or call your drawing functions...
-	DrawAlphabet((alphabets)0, 10, height / 2, awidth, aheight);
-	DrawAlphabet((alphabets)1, 70, height / 2, awidth, aheight);
-	DrawAlphabet((alphabets)2, 130, height / 2, awidth, aheight);
+for (int col = 0; col < NUM_COLS; ++col) {
+    DrawAlphabet(charToAlphabet(topalphabets[1][col]), 10 + col * 60, height - 160, awidth, aheight); // Second row
+}
+  
+        
+     if(startdisplay>0 && timee!=0){
+	//shooting alphabet
+	//first shoot
+	if(loc1y<435&&clickcount==1){
+	if (shotx!=-1&&shoty!=-1&&reachedtarget){
+        //float dx=shotx-loc1x;
+        //float dy=shoty-loc1y;
+        float distance=sqrt(dx*dx+dy*dy);
+        if(distance>1.0f){
+        float dirx=dx/distance;
+        float diry=dy/distance;
+        loc1x+=dirx*15;
+        loc1y+=diry*15;
+        if(loc1x>870){
+        loc1x=870;
+        dx=-dx;
+        }
+        if(loc1x<0){
+        loc1x=0;
+        dx=-dx;
+        }
+        if(loc1y>660){
+        loc1y=660;
+        }
+        }
+	}
+	}
+	DrawAlphabet((alphabets)num[31], loc1x, loc1y, awidth, aheight);
+	
+	//second shoot
+	
+	if(loc2y<435 && loc1y>415&&clickcount==2){
+	if (shotx!=-1&&shoty!=-1&&bubblemoving) {
+        //float dx=shotx-loc2x;
+        //float dy=shoty-loc2y;
+        float distance=sqrt(dx*dx+dy*dy);
+        if(distance>1.0f){
+        float dirx=dx/distance;
+        float diry=dy/distance;
+        
+        loc2x+=dirx*5;
+        loc2y+=diry*5;
+        if(loc2x>870){
+        loc2x=870;
+        dx=-dx;
+        }
+        if(loc2x<0){
+        loc2x=0;
+        dx=-dx;
+        }
+        if(loc2y>660){
+        loc2y=660;
+        }
+        }
+	}
+	if(loc2y==435)
+	bubblemoving=false;
+	}
+	
+	//loc2y=loc2y+8;
+	
+	if(loc1y>415){
+	DrawAlphabet((alphabets)num[32], loc2x, loc2y, awidth, aheight);
+	}
+	
+	//third shoot
+	if(loc3y<435 && loc2y>415&&clickcount==3){
+	if (shotx!=-1&&shoty!=-1&&bubblemoving) {
+        //float dx=shotx-loc3x;
+        //float dy=shoty-loc3y;
+        float distance=sqrt(dx*dx+dy*dy);
+        if(distance>1.0f){
+        float dirx=dx/distance;
+        float diry=dy/distance;
+        
+        loc3x+=dirx*15;
+        loc3y+=diry*15;
+        if(loc3x>870){
+        loc3x=870;
+        dx=-dx;
+        }
+        if(loc3x<0){
+        loc3x=0;
+        dx=-dx;
+        }
+        if(loc3y>660){
+        loc3y=660;
+        }
+        }
+	}
+	if(loc3y==435)
+	bubblemoving=false;
+	}
+	//loc3y=loc3y+8;
+	
+	if(loc2y>415){
+	DrawAlphabet((alphabets)num[33], loc3x, loc3y, awidth, aheight);
+	}
+	
+	//forth shoot
+	if(loc4y<435 && loc3y>415&&clickcount==4){
+	if (shotx!=-1&&shoty!=-1&&bubblemoving) {
+        //float dx=shotx-loc4x;
+        //float dy=shoty-loc4y;
+        float distance=sqrt(dx*dx+dy*dy);
+        if(distance>1.0f){
+        float dirx=dx/distance;
+        float diry=dy/distance;
+        
+        loc4x+=dirx*15;
+        loc4y+=diry*15;
+        if(loc4x>870){
+        loc4x=870;
+        dx=-dx;
+        }
+        if(loc4x<0){
+        loc4x=0;
+        dx=-dx;
+        }
+        if(loc4y>660){
+        loc4y=660;
+        }
+        }
+	}
+	if(loc4y==435)
+	bubblemoving=false;
+	}
+	if(loc3y>415){
+	DrawAlphabet((alphabets)num[34], loc4x, loc4y, awidth, aheight);
+	}
+	
+	//fifth shoot
+	if(loc5y<435 && loc4y>415&&clickcount==5){
+	if(shotx!=-1&&shoty!=-1&&bubblemoving){
+    //    float dx=shotx-loc5x;
+    //    float dy=shoty-loc5y;
+        float distance=sqrt(dx*dx+dy*dy);
+        if(distance>1.0f){
+        float dirx=dx/distance;
+        float diry=dy/distance;
+        
+        loc5x+=dirx*15;
+        loc5y+=diry*15;
+        if(loc5x>870){
+        loc5x=870;
+        dx=-dx;
+        }
+        if(loc5x<0){
+        loc5x=0;
+        dx=-dx;
+        }
+        if(loc5y>660){
+        loc5y=660;
+        }
+        }
+	}
+	if(loc5y==435)
+	bubblemoving=false;
+	}
+	if(loc4y>415){
+	DrawAlphabet((alphabets)num[35], loc5x, loc5y, awidth, aheight);
+	}
+	
+	//sixth shoot
+	if(loc6y<435 && loc5y>415&&clickcount==6){
+	if (shotx!=-1&&shoty!=-1&&bubblemoving) {
+       // float dx=shotx-loc6x;
+       // float dy=shoty-loc6y;
+        float distance=sqrt(dx*dx+dy*dy);
+        if(distance>1.0f){
+        float dirx=dx/distance;
+        float diry=dy/distance;
+        
+        loc6x+=dirx*15;
+        loc6y+=diry*15;
+        if(loc6x>870){
+        loc6x=870;
+        dx=-dx;
+        }
+        if(loc6x<0){
+        loc6x=0;
+        dx=-dx;
+        }
+        if(loc6y>660){
+        loc6y=660;
+        }
+        }
+	}
+	if(loc6y==435)
+	bubblemoving=false;
+	}
+	if(loc5y>415){
+	DrawAlphabet((alphabets)num[36], loc6x, loc6y, awidth, aheight);
+	}
+	
+	//seventh shoot
+	if(loc7y<435 && loc6y>415&&clickcount==7){
+	if (shotx!=-1&&shoty!=-1&&bubblemoving) {
+        //float dx=shotx-loc7x;
+        //float dy=shoty-loc7y;
+        float distance=sqrt(dx*dx+dy*dy);
+        if(distance>1.0f){
+        float dirx=dx/distance;
+        float diry=dy/distance;
+        
+        loc7x+=dirx*15;
+        loc7y+=diry*15;
+        if(loc7x>870){
+        loc7x=870;
+        dx=-dx;
+        }
+        if(loc7x<0){
+        loc7x=0;        
+        dx=-dx;
+        }
+        if(loc7y>660){
+        loc7y=660;
+        }
+        }
+	}
+	if(loc7y==435)
+	bubblemoving=false;
+	}
+	if(loc6y>415){
+	DrawAlphabet((alphabets)num[37], loc7x, loc7y, awidth, aheight);
+	}
+	
+	//eighth shoot
+	if(loc8y<435 && loc7y>415&&clickcount==8){
+	if (shotx!=-1&&shoty!=-1&&bubblemoving) {
+       // float dx=shotx-loc8x;
+       // float dy=shoty-loc8y;
+        float distance=sqrt(dx*dx+dy*dy);
+        if(distance>1.0f){
+        float dirx=dx/distance;
+        float diry=dy/distance;
+        
+        loc8x+=dirx*15;
+        loc8y+=diry*15;
+        if(loc4x>870){
+        loc8x=870;
+        dx=-dx;
+        }
+        if(loc8x<0){
+        loc8x=0;
+        dx=-dx;
+        }
+        if(loc8y>660){
+        loc8y=660;
+        }
+        }
+	}
+	if(loc8y==435)
+	bubblemoving=false;
+	}
+	if(loc7y>415){
+	DrawAlphabet((alphabets)num[38], loc8x, loc8y, awidth, aheight);
+	}
+	
+	//ninth shoot
+	if(loc9y<435 && loc8y>415&&clickcount==9){
+	if (shotx!=-1&&shoty!=-1&&bubblemoving) {
+      //  float dx=shotx-loc9x;
+        //float dy=shoty-loc9y;
+        float distance=sqrt(dx*dx+dy*dy);
+        if(distance>1.0f){
+        float dirx=dx/distance;
+        float diry=dy/distance;
+        
+        loc9x+=dirx*15;
+        loc9y+=diry*15;
+        if(loc9x>870){
+        loc4x=870;
+        dx=-dx;
+        }
+        if(loc9x<0){
+        loc9x=0;
+        dx=-dx;
+        }
+        if(loc9y>660){
+        loc9y=660;
+        }
+        }
+	}
+	if(loc9y==435)
+	bubblemoving=false;
+	}
+	if(loc8y>415){
+	DrawAlphabet((alphabets)num[39], loc9x, loc9y, awidth, aheight);
+	}
+	
+	//tenth shoot
+	if(loc10y<435 && loc9y>415&&clickcount==10){
+	if (shotx!=-1&&shoty!=-1&&bubblemoving) {
+      //  float dx=shotx-loc10x;
+      //  float dy=shoty-loc10y;
+        float distance=sqrt(dx*dx+dy*dy);
+        if(distance>1.0f){
+        float dirx=dx/distance;
+        float diry=dy/distance;
+        
+        loc10x+=dirx*15;
+        loc10y+=diry*15;
+        if(loc10x>870){
+        loc10x=870;
+        dx=-dx;
+        }
+        if(loc10x<0){
+        loc10x=0;
+        dx=-dx;
+        }
+        if(loc10y>660){
+        loc10y=660;
+        }
+        }
+	}
+	if(loc10y==435)
+	bubblemoving=false;
+	}
+	if(loc9y>415){
+	DrawAlphabet((alphabets)num[40], loc10x, loc10y, awidth, aheight);
+	}
+	//eleventh shoot
+	if(loc11y<435 && loc10y>415&&clickcount==11){
+	if (shotx!=-1&&shoty!=-1&&bubblemoving) {
+        //float dx=shotx-loc11x;
+       // float dy=shoty-loc11y;
+        float distance=sqrt(dx*dx+dy*dy);
+        if(distance>1.0f){
+        float dirx=dx/distance;
+        float diry=dy/distance;
+        
+        loc11x+=dirx*15;
+        loc11y+=diry*15;
+        if(loc11x>870){
+        loc11x=870;
+        dx=-dx;
+        }
+        if(loc11x<0){
+        loc11x=0;
+        dx=-dx;
+        }
+        if(loc11y>660){
+        loc11y=660;
+        }
+        }
+	}
+	if(loc11y==435)
+	bubblemoving=false;
+	}
+	if(loc10y>415){
+	DrawAlphabet((alphabets)num[41], loc11x, loc11y, awidth, aheight);
+	}
+	//twelveth shoot
+	if(loc12y<435 && loc11y>415&&clickcount==12){
+	if (shotx!=-1&&shoty!=-1&&bubblemoving) {
+     //   float dx=shotx-loc12x;
+       // float dy=shoty-loc12y;
+        float distance=sqrt(dx*dx+dy*dy);
+        if(distance>1.0f){
+        float dirx=dx/distance;
+        float diry=dy/distance;
+        
+        loc12x+=dirx*15;
+        loc12y+=diry*15;
+        if(loc12x>870){
+        loc12x=870;
+        dx=-dx;
+        }
+        if(loc12x<0){
+        loc12x=0;
+        dx=-dx;
+        }
+        if(loc12y>660){
+        loc12y=660;
+        }
+        }
+	}
+	if(loc12y==435)
+	bubblemoving=false;
+	}
+	if(loc11y>415){
+	DrawAlphabet((alphabets)num[42], loc12x, loc12y, awidth, aheight);
+	}
+	//thirteenth shoot
+	if(loc13y<435 && loc12y>415&&clickcount==13){
+	if (shotx!=-1&&shoty!=-1&&bubblemoving) {
+  //      float dx=shotx-loc13x;
+    //    float dy=shoty-loc13y;
+        float distance=sqrt(dx*dx+dy*dy);
+        if(distance>1.0f){
+        float dirx=dx/distance;
+        float diry=dy/distance;
+        
+        loc13x+=dirx*15;
+        loc13y+=diry*15;
+        if(loc13x>870){
+        loc13x=870;
+        dx=-dx;
+        }
+        if(loc13x<0){
+        loc13x=0;
+        dx=-dx;
+        }
+        if(loc13y>660){
+        loc13y=660;
+        }
+        }
+	}
+	if(loc13y==435)
+	bubblemoving=false;
+	}
+	if(loc12y>415){
+	DrawAlphabet((alphabets)num[43], loc13x, loc13y, awidth, aheight);
+	}
+	if(loc14y<435 && loc12y>415&&clickcount==14){
+	if (shotx!=-1&&shoty!=-1&&bubblemoving) {
+   //     float dx=shotx-loc14x;
+     //   float dy=shoty-loc14y;
+        float distance=sqrt(dx*dx+dy*dy);
+        if(distance>1.0f){
+        float dirx=dx/distance;
+        float diry=dy/distance;
+        
+        loc14x+=dirx*15;
+        loc14y+=diry*15;
+        if(loc14x>870){
+        loc14x=870;
+        dx=-dx;
+        }
+        if(loc14x<0){
+        loc14x=0;
+        dx=-dx;
+        }
+        if(loc14y>660){
+        loc14y=660;
+        }
+        }
+	}
+	if(loc14y==435)
+	bubblemoving=false;
+	}
+	if(loc13y>415){
+	DrawAlphabet((alphabets)num[44], loc14x, loc14y, awidth, aheight);
+	}
+	if(loc15y<435 && loc14y>415&&clickcount==15){
+	if (shotx!=-1&&shoty!=-1&&bubblemoving) {
+      //  float dx=shotx-loc15x;
+      //  float dy=shoty-loc15y;
+        float distance=sqrt(dx*dx+dy*dy);
+        if(distance>1.0f){
+        float dirx=dx/distance;
+        float diry=dy/distance;
+        
+        loc15x+=dirx*15;
+        loc15y+=diry*15;
+        if(loc15x>870){
+        loc15x=870;
+        dx=-dx;
+        }
+        if(loc15x<0){
+        loc15x=0;
+        dx=-dx;
+        }
+        if(loc15y>660){
+        loc15y=660;
+        }
+        }
+	}
+	if(loc15y==435)
+	bubblemoving=false;
+	}
+	if(loc14y>415){
+	DrawAlphabet((alphabets)num[45], loc15x, loc15y, awidth, aheight);
+	}
 
-
-
-
-
+        if(loc16y<390 && loc15y>380&&clickcount==16){
+	if (shotx!=-1&&shoty!=-1&&bubblemoving) {
+       // float dx=shotx-loc16x;
+       // float dy=shoty-loc16y;
+        float distance=sqrt(dx*dx+dy*dy);
+        if(distance>1.0f){
+        float dirx=dx/distance;
+        float diry=dy/distance;
+        
+        loc16x+=dirx*15;
+        loc16y+=diry*15;
+        if(loc16x>870){
+        loc16x=870;
+        dx=-dx;
+        }
+        if(loc16x<0){
+        loc16x=0;
+        dx=-dx;
+        }
+        if(loc16y>660){
+        loc16y=660;
+        }
+        }
+	}
+	if(loc16y==435)
+	bubblemoving=false;
+	}
+	if(loc15y>380){
+	DrawAlphabet((alphabets)num[46], loc16x, loc16y, awidth, aheight);
+	}
+	if(loc17y<390 && loc16y>380&&clickcount==17){
+	if (shotx!=-1&&shoty!=-1&&bubblemoving) {
+       // float dx=shotx-loc17x;
+       // float dy=shoty-loc17y;
+        float distance=sqrt(dx*dx+dy*dy);
+        if(distance>1.0f){
+        float dirx=dx/distance;
+        float diry=dy/distance;
+        
+        loc17x+=dirx*15;
+        loc17y+=diry*15;
+        if(loc17x>870){
+        loc17x=870;
+        dx=-dx;
+        }
+        if(loc17x<0){
+        loc17x=0;
+        dx=-dx;
+        }
+        if(loc17y>660){
+        loc17y=660;
+        }
+        }
+	}
+	if(loc17y==435)
+	bubblemoving=false;
+	}
+	if(loc16y>380){
+	DrawAlphabet((alphabets)num[47], loc17x, loc17y, awidth, aheight);
+	}
+	if(loc18y<390 && loc17y>380&&clickcount==18){
+	if (shotx!=-1&&shoty!=-1&&bubblemoving) {
+      //  float dx=shotx-loc18x;
+        //float dy=shoty-loc18y;
+        float distance=sqrt(dx*dx+dy*dy);
+        if(distance>1.0f){
+        float dirx=dx/distance;
+        float diry=dy/distance;
+        
+        loc18x+=dirx*15;
+        loc18y+=diry*15;
+        if(loc18x>870){
+        loc18x=870;
+        dx=-dx;
+        }
+        if(loc18x<0){
+        loc18x=0;
+        dx=-dx;
+        }
+        if(loc18y>660){
+        loc18y=660;
+        }
+        }
+	}
+	if(loc18y==435)
+	bubblemoving=false;
+	}
+	if(loc17y>380){
+	DrawAlphabet((alphabets)num[48], loc18x, loc18y, awidth, aheight);
+	}
+	if(loc19y<390 && loc18y>380&&clickcount==19){
+	if (shotx!=-1&&shoty!=-1&&bubblemoving) {
+    //    float dx=shotx-loc19x;
+      //  float dy=shoty-loc19y;
+        float distance=sqrt(dx*dx+dy*dy);
+        if(distance>1.0f){
+        float dirx=dx/distance;
+        float diry=dy/distance;
+        
+        loc19x+=dirx*15;
+        loc19y+=diry*15;
+        if(loc19x>870){
+        loc19x=870;
+        dx=-dx;
+        }
+        if(loc19x<0){
+        loc19x=0;
+        dx=-dx;
+        }
+        if(loc19y>660){
+        loc19y=660;
+        }
+        }
+	}
+	if(loc19y==435)
+	bubblemoving=false;
+	}
+	if(loc18y>380){
+	DrawAlphabet((alphabets)num[49], loc19x, loc19y, awidth, aheight);
+	}
+	if(loc20y<390 && loc19y>380&&clickcount==20){
+	if (shotx!=-1&&shoty!=-1&&bubblemoving) {
+        float dx=shotx-loc20x;
+        float dy=shoty-loc20y;
+        float distance=sqrt(dx*dx+dy*dy);
+        if(distance>1.0f){
+        float dirx=dx/distance;
+        float diry=dy/distance;
+        
+        loc20y+=dirx*15;
+        loc20y+=diry*15;
+        if(loc20x>870){
+        loc20x=870;
+        dx=-dx;
+        }
+        if(loc20x<0){
+        loc20x=0;
+        dx=-dx;
+        }
+        if(loc20y>660){
+        loc20y=660;
+        }
+        }
+	}
+	if(loc20y==435)
+	bubblemoving=false;
+	}
+	if(loc19y>380){
+	DrawAlphabet((alphabets)num[50], loc20x, loc20y, awidth, aheight);
+	}
+	if(loc21y<390 && loc20y>380&&clickcount==21){
+	if (shotx!=-1&&shoty!=-1&&bubblemoving) {
+        float dx=shotx-loc21x;
+        float dy=shoty-loc21y;
+        float distance=sqrt(dx*dx+dy*dy);
+        if(distance>1.0f){
+        float dirx=dx/distance;
+        float diry=dy/distance;
+        
+        loc21x+=dirx*15;
+        loc21y+=diry*15;
+        if(loc21x>870){
+        loc21x=870;
+        dx=-dx;
+        }
+        if(loc21x<0){
+        loc21x=0;
+        dx=-dx;
+        }
+        if(loc21y>660){
+        loc21y=660;
+        }
+        }
+	}
+	if(loc21y==435)
+	bubblemoving=false;
+	}
+	if(loc20y>380){
+	DrawAlphabet((alphabets)num[28], loc21x, loc21y, awidth, aheight);
+	}
+	if(loc22y<390 && loc21y>380&&clickcount==22){
+	if (shotx!=-1&&shoty!=-1&&bubblemoving) {
+        float dx=shotx-loc22x;
+        float dy=shoty-loc22y;
+        float distance=sqrt(dx*dx+dy*dy);
+        if(distance>1.0f){
+        float dirx=dx/distance;
+        float diry=dy/distance;
+        
+        loc22x+=dirx*15;
+        loc22y+=diry*15;
+        if(loc22x>870){
+        loc22x=870;
+        dx=-dx;
+        }
+        if(loc22x<0){
+        loc22x=0;
+        dx=-dx;
+        }
+        if(loc22y>660){
+        loc22y=660;
+        }
+        }
+	}
+	if(loc22y==435)
+	bubblemoving=false;
+	}
+	
+	if(loc21y>380){
+	DrawAlphabet((alphabets)num[30], loc22x, loc22y, awidth, aheight);
+	}
+        if(loc23y<390 && loc22y>380&&clickcount==23){
+	if (shotx!=-1&&shoty!=-1&&bubblemoving) {
+     //   float dx=shotx-loc23x;
+       // float dy=shoty-loc23y;
+        float distance=sqrt(dx*dx+dy*dy);
+        if(distance>1.0f){
+        float dirx=dx/distance;
+        float diry=dy/distance;
+        
+        loc23x+=dirx*15;
+        loc23y+=diry*15;
+        if(loc23x>870){
+        loc23x=870;
+        dx=-dx;
+        }
+        if(loc23x<0){
+        loc23x=0;
+        dx=-dx;
+        }
+        if(loc23y>660){
+        loc23y=660;
+        }
+        }
+	}
+	if(loc23y==435)
+	bubblemoving=false;
+	}	
+	if(loc22y>380){
+	DrawAlphabet((alphabets)num[26], loc23x, loc23y, awidth, aheight);
+	}
+	if(loc24y<390 && loc23y>380&&clickcount==24){
+	if (shotx!=-1&&shoty!=-1&&bubblemoving) {
+//        float dx=shotx-loc24x;
+  //      float dy=shoty-loc24y;
+        float distance=sqrt(dx*dx+dy*dy);
+        if(distance>1.0f){
+        float dirx=dx/distance;
+        float diry=dy/distance;
+        
+        loc24x+=dirx*15;
+        loc24y+=diry*15;
+        if(loc24x>870){
+        loc24x=870;
+        dx=-dx;
+        }
+        if(loc24x<0){
+        loc24x=0;
+        dx=-dx;
+        }
+        if(loc24y>660){
+        loc24y=660;
+        }
+        }
+	}
+	if(loc24y==435)
+	bubblemoving=false;
+	}
+	if(loc23y>380){
+	DrawAlphabet((alphabets)num[25], loc24x, loc24y, awidth, aheight);
+	}
+	if(loc25y<390 && loc24y>380&&clickcount==25){
+	loc25y=loc25y+8;
+	}
+	if(loc24y>380){
+	DrawAlphabet((alphabets)num[27], loc25x, loc25y, awidth, aheight);
+	}
+	if(loc26y<390 && loc25y>380&&clickcount==26){
+	loc26y=loc26y+8;
+	}
+	if(loc25y>380){
+	DrawAlphabet((alphabets)num[29], loc26x, loc26y, awidth, aheight);
+	}
+	if(loc27y<390 && loc26y>380&&clickcount==27){
+	loc27y=loc27y+8;
+	}
+	if(loc26y>380){
+	DrawAlphabet((alphabets)num[30], loc27x, loc27y, awidth, aheight);
+	}
+    
 	DrawString(40, height - 20, width, height + 5, "Score " + Num2Str(score), colors[BLUE_VIOLET]);
 	DrawString(width / 2 - 30, height - 25, width, height,
-		"Time Left:" + Num2Str(2) + " secs", colors[RED]);
+		"Time Left:" + Num2Str(timee) + " secs", colors[RED]);
+	DrawString(80, height - 20, 500, height + 5, "Nauman Rafay\t24i-2558 ", colors[BLUE_VIOLET]);
+		
+	//end of game
+	}
+	if(timee==0 && startdisplay>=1){
+	DrawAlphabet((alphabets)6, 250, height-300, awidth, aheight);
+	DrawAlphabet((alphabets)0, 310, height -300, awidth, aheight);
+	DrawAlphabet((alphabets)12, 370, height -300, awidth, aheight);
+	DrawAlphabet((alphabets)4, 430, height -300, awidth, aheight);
+	DrawAlphabet((alphabets)14, 490, height-300, awidth, aheight);
+	DrawAlphabet((alphabets)21, 550, height -300, awidth, aheight);
+	DrawAlphabet((alphabets)4, 610, height -300, awidth, aheight);
+	DrawAlphabet((alphabets)17, 670, height -300, awidth, aheight);
+	DrawString(425, 310, width, height + 5, "Final Score: " + Num2Str(score), colors[BLUE_VIOLET]);
+	DrawString(235, 50, width, height + 5, "-" , colors[WHITE]);
+	}
+	if(timee>0 && startdisplay>=1){
+	timee--;
+	}
 
 	// #----------------- Write your code till here ----------------------------#
 	//DO NOT MODIFY THESE LINES
 	DrawShooter((width / 2) - 35, 0, bwidth, bheight);
 	glutSwapBuffers();
 	//DO NOT MODIFY THESE LINES..
-}
+}	
+	
 
 /* Function sets canvas size (drawing area) in pixels...
 *  that is what dimensions (x and y) your game will have
 *  Note that the bottom-left coordinate has value (0,0) and top-right coordinate has value (width-1,height-1)
 * */
 void SetCanvasSize(int width, int height) {
-	/*glMatrixMode(GL_PROJECTION);
+	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
-	glOrtho(0, width, 0, height, -1, 1); // set the screen size to given width and height.*/
+	glOrtho(0, width, 0, height, -1, 1); // set the screen size to given width and height.
 }
 
 /*This function is called (automatically) whenever any non-printable key (such as up-arrow, down-arraw)
@@ -285,12 +1246,199 @@ void SetCanvasSize(int width, int height) {
 * */
 
 void NonPrintableKeys(int key, int x, int y) {
-	if (key == GLUT_KEY_LEFT /*GLUT_KEY_LEFT is constant and contains ASCII for left arrow key*/) {
-		// what to do when left key is pressed...
-
+	if (key == GLUT_KEY_LEFT) {
+        /*  if(loc1y<435&&loc1x>0){
+		loc1x=loc1x-15;
+		}
+		//second shoot
+		if(loc1y>400 && (loc2y<435 && loc2x > 0)){
+		loc2x=loc2x-15;
+		}
+		//third shoot
+		if(loc2y>400 && (loc3y<435&& loc3x > 0)){
+		loc3x=loc3x-15;
+		}*/
+		//forth shoot
+		if(loc3y>400 && (loc4y<435&& loc4x > 0)){
+		loc4x=loc4x-15;
+		}
+		//fifth shoot
+		if(loc4y>400 && (loc5y<435&& loc5x > 0)){
+		loc5x=loc5x-15;
+		}
+		//sixth shoot
+		if(loc5y>400 && (loc6y<435&&loc6x>0)){
+		loc6x=loc6x-15;
+		}
+		//seventh shoot
+		if(loc6y>400 && (loc7y<435&& loc7x > 0)){
+		loc7x=loc7x-15;
+		}
+		//eighth shoot
+		if(loc7y>400 && (loc8y<435&&loc8x>0)){
+		loc8x=loc8x-15;
+		}
+		//ninth shoot
+		if(loc8y>400 && (loc9y<435&&loc9x>0)){
+		loc9x=loc9x-15;
+		}
+		//tenth shoot
+		if(loc9y>400 && (loc10y<435&&loc10x>0)){
+		loc10x=loc10x-15;
+		}
+		//eleventh shoot
+		if(loc10y>400 && (loc11y<435&&loc11x>0)){
+		loc11x=loc11x-15;
+		}
+		//twelveth shoot
+		if(loc11y>400 && (loc12y<435&&loc12x>0)){
+		loc12x=loc12x-15;
+		}
+		//thirteenth shoot
+		if(loc12y>400 && (loc13y<435&&loc13x>0)){
+		loc13x=loc13x-15;
+		}
+		if(loc13y>400 && (loc14y<435&&loc14x>0)){
+		loc14x=loc14x-15;
+		}
+		if(loc14y>400 && (loc15y<435&&loc15x>0)){
+		loc15x=loc15x-15;
+		}
+		if(loc15y>380 && (loc16y<380&&loc16x>0)){
+		loc16x=loc16x-15;
+		}
+		if(loc16y>380 && (loc17y<380&&loc17x>0)){
+		loc17x=loc17x-15;
+		}
+		if(loc17y>380 && (loc18y<380&&loc18x>0)){
+		loc18x=loc18x-15;
+		}
+		if(loc18y>380 && (loc19y<380&&loc19x>0)){
+		loc19x=loc19x-15;
+		}
+		if(loc19y>380 && (loc20y<380&&loc20x>0)){
+		loc20x=loc20x-15;
+		}
+		if(loc20y>380 && (loc21y<380&&loc21x>0)){
+		loc21x=loc21x-15;
+		}
+		if(loc21y>380 && (loc22y<380&&loc22x>0)){
+		loc22x=loc22x-15;
+		}
+		if(loc22y>380 && (loc23y<380&&loc23x>0)){
+		loc23x=loc23x-15;
+		}
+		if(loc23y>380 && (loc24y<380&&loc24x>0)){
+		loc24x=loc24x-15;
+		}
+		if(loc24y>380 && (loc25y<380&&loc25x>0)){
+		loc25x=loc25x-15;
+		}
+		if(loc25y>380 && (loc26y<380&&loc26x>0)){
+		loc26x=loc26x-15;
+		}
+		if(loc26y>380 && (loc27y<380&&loc27x>0)){
+		loc27x=loc27x-15;
+		}
+	      
 	}
 	else if (key == GLUT_KEY_RIGHT /*GLUT_KEY_RIGHT is constant and contains ASCII for right arrow key*/) {
-
+           // if (shooterX < width - bwidth) {
+            //shooterX += shooterSpeed;
+        //}
+        
+               /*if(loc1y<435&&loc1x<870){
+		loc1x=loc1x+15;
+		}
+		//second shoot
+		if(loc1y>400 && (loc2y<435&&loc2x<870)){
+		loc2x=loc2x+15;
+		}
+		//third shoot
+		if(loc2y>400 && (loc3y<435&&loc3x<870)){
+		loc3x=loc3x+15;
+		}*/
+		//forth shoot
+		if(loc3y>400 && (loc4y<435&&loc4x<870)){
+		loc4x=loc4x+15;
+		}
+		//fifth shoot
+		if(loc4y>400 && (loc5y<435&&loc5x<870)){
+		loc5x=loc5x+15;
+		}
+		//sixth shoot
+		if(loc5y>400 && (loc6y<435&&loc6x<870)){
+		loc6x=loc6x+15;
+		}
+		//seventh shoot
+		if(loc6y>400 && (loc7y<435&&loc7x<870)){
+		loc7x=loc7x+15;
+		}
+		//eighth shoot
+		if(loc7y>400 && (loc8y<435&&loc8x<870)){
+		loc8x=loc8x+15;
+		}
+		//ninth shoot
+		if(loc8y>400 && (loc9y<435&&loc9x<870)){
+		loc9x=loc9x+15;
+		}
+		//tenth shoot
+		if(loc9y>400 && (loc10y<435&&loc10x<870)){
+		loc10x=loc10x+15;
+		}
+		//eleventh shoot
+		if(loc10y>400 && (loc11y<435&&loc11x<870)){
+		loc11x=loc11x+15;
+		}
+		//twelveth shoot
+		if(loc11y>400 && (loc12y<435&&loc12x<870)){
+		loc12x=loc12x+15;
+		}
+		if(loc12y>400 && (loc13y<435&&loc13x<870)){
+		loc13x=loc13x+15;
+		}
+		if(loc13y>400 && (loc14y<435&&loc14x<870)){
+		loc14x=loc14x+15;
+		}
+		if(loc14y>400 && (loc15y<435&&loc15x<870)){
+		loc15x=loc15x+15;
+		}
+		if(loc15y>380 && (loc16y<380&&loc16x<870)){
+		loc16x=loc16x+15;
+		}
+		if(loc16y>380 && (loc17y<380&&loc17x<870)){
+		loc17x=loc17x+15;
+		}
+		if(loc17y>380 && (loc18y<380&&loc18x<870)){
+		loc18x=loc18x+15;
+		}
+		if(loc18y>380 && (loc19y<380&&loc19x<870)){
+		loc19x=loc19x+15;
+		}
+		if(loc19y>380 && (loc20y<380&&loc20x<870)){
+		loc20x=loc20x+15;
+		}
+		if(loc20y>380 && (loc21y<380&&loc21x<870)){
+		loc21x=loc21x+15;
+		}
+		if(loc21y>380 && (loc22y<380&&loc22x<870)){
+		loc22x=loc22x+15;
+		}
+		if(loc22y>380 && (loc23y<380&&loc23x<870)){
+		loc23x=loc23x+15;
+		}
+		if(loc23y>380 && (loc24y<380&&loc24x<870)){
+		loc24x=loc24x+15;
+		}
+		if(loc24y>380 && (loc25y<380&&loc25x<870)){
+		loc25x=loc25x+15;
+		}
+		if(loc25y>380 && (loc26y<380&&loc26x<870)){
+		loc26x=loc26x+15;
+		}
+		if(loc26y>380 && (loc27y<380&&loc27x<870)){
+		loc27x=loc27x+15;
+		}
 	}
 	else if (key == GLUT_KEY_UP/*GLUT_KEY_UP is constant and contains ASCII for up arrow key*/) {
 	}
@@ -328,19 +1476,29 @@ void MouseMoved(int x, int y) {
 void MouseClicked(int button, int state, int x, int y) {
 
 	if (button == GLUT_LEFT_BUTTON) // dealing only with left button
-	{
+	{     
 		if (state == GLUT_UP)
 		{
-
-
+		
+		  clickcount++;
+                  startdisplay++;
+                  shotx =x-435; 
+                  shoty =400+y;
+                  bubblemoving=true;
+                  dx=shotx-locx;
+                  dy=shoty-locy;
+              //    Distance=sqrt(dx*dx+dy*dy);
+		
 		}
 	}
+	
 	else if (button == GLUT_RIGHT_BUTTON) // dealing with right button
 	{
 
 	}
 	glutPostRedisplay();
 }
+
 /*This function is called (automatically) whenever any printable key (such as x,b, enter, etc.)
 * is pressed from the keyboard
 * This function has three argument variable key contains the ASCII of the key pressed, while x and y tells the
@@ -350,7 +1508,9 @@ void PrintableKeys(unsigned char key, int x, int y) {
 	if (key == KEY_ESC/* Escape key ASCII*/) {
 		exit(1); // exit the program when escape key is pressed.
 	}
+
 }
+
 
 /*
 * This function is called after every 1000.0/FPS milliseconds
@@ -360,10 +1520,9 @@ void PrintableKeys(unsigned char key, int x, int y) {
 *
 * */
 void Timer(int m) {
-
 	glutPostRedisplay();
-	glutTimerFunc(1000.0/FPS, Timer, 0);
-}
+	glutTimerFunc(100.0/FPS, Timer, 0);
+ }
 
 /*
 * our gateway main function
@@ -379,9 +1538,11 @@ int main(int argc, char*argv[]) {
 		cout<< " word "<< i << " =" << dictionary[i] <<endl;
 
 	//Write your code here for filling the canvas with different Alphabets. You can use the Getalphabet function for getting the random alphabets
+        for(int i=0;i<NUM_COUNT;i++){
+        num[i]=rand()%26; 
+        }
 
-
-
+        
 	glutInit(&argc, argv); // initialize the graphics library...
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA); // we will be using color display mode
 	glutInitWindowPosition(50, 50); // set the initial position of our window
@@ -397,12 +1558,12 @@ int main(int argc, char*argv[]) {
 	glutKeyboardFunc(PrintableKeys); // tell library which function to call for printable ASCII characters
 	glutMouseFunc(MouseClicked);
 	glutPassiveMotionFunc(MouseMoved); // Mouse
-
-	//// This function tells the library to call our Timer function after 1000.0/FPS milliseconds...
+          
+	 This functiontells the library to call our Timer function after 1000.0/FPS milliseconds...
 	glutTimerFunc(1000.0/FPS, Timer, 0);
 
-	//// now handle the control to library and it will call our registered functions when
-	//// it deems necessary...
+	 now handle the control to library and it will call our registered functions when
+	 it deems necessary...
 
 	glutMainLoop();
 
