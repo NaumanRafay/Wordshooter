@@ -14,7 +14,8 @@
 #include<cmath>
 #include<fstream>
 #include "util.h"
-
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_mixer.h>
 using namespace std;
 #define MAX(A,B) ((A) > (B) ? (A):(B)) // defining single line functions....
 #define MIN(A,B) ((A) < (B) ? (A):(B))
@@ -138,6 +139,22 @@ char topalphabets[NUM_ROWS][NUM_COLS] = {
     {'A', 'E', 'D', 'C', 'B', 'N', 'J', 'Z', 'G', 'L', 'Q', 'M', 'B', 'K','N'},
     {'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', 'B','M'}
 };
+void InitializeAudio() {
+    if (SDL_Init(SDL_INIT_AUDIO) < 0) {
+        cerr << "Failed to initialize SDL audio: " << SDL_GetError() << endl;
+        exit(-1);
+    }
+    
+    if (Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048) < 0) {
+        cerr << "Failed to initialize SDL_mixer: " << Mix_GetError() << endl;
+        exit(-1);
+    }
+}
+
+void CleanupAudio() {
+    Mix_CloseAudio();
+    SDL_Quit();
+}
 void loadDictionary(std::string* dictionary) {
     ifstream file("dictionary.txt");
     if (!file.is_open()) {
@@ -559,11 +576,12 @@ for (int col = 0; col < NUM_COLS; ++col) {
         }
         if(loc1y>660){
         loc1y=660;
-        maxlengthword_h();  
-        maxlengthword_v();
+        dy=-dy; 
         }
         }
 	}
+	//maxlengthword_h();  
+       // maxlengthword_v();
 	}
 	DrawAlphabet((alphabets)num[31], loc1x, loc1y, awidth, aheight);
 	
@@ -590,6 +608,7 @@ for (int col = 0; col < NUM_COLS; ++col) {
         }
         if(loc2y>660){
         loc2y=660;
+        dy=-dy;
         }
         }
 	}
@@ -625,6 +644,7 @@ for (int col = 0; col < NUM_COLS; ++col) {
         }
         if(loc3y>660){
         loc3y=660;
+        dy=-dy;
         }
         }
 	}
@@ -1286,19 +1306,91 @@ for (int col = 0; col < NUM_COLS; ++col) {
 	DrawAlphabet((alphabets)num[25], loc24x, loc24y, awidth, aheight);
 	}
 	if(loc25y<390 && loc24y>380&&clickcount==25){
-	loc25y=loc25y+8;
+	if (shotx!=-1&&shoty!=-1&&bubblemoving) {
+//        float dx=shotx-loc24x;
+  //      float dy=shoty-loc24y;
+        float distance=sqrt(dx*dx+dy*dy);
+        if(distance>1.0f){
+        float dirx=dx/distance;
+        float diry=dy/distance;
+        
+        loc25x+=dirx*30;
+        loc25y+=diry*30;
+        if(loc25x>870){
+        loc25x=870;
+        dx=-dx;
+        }
+        if(loc25x<0){
+        loc25x=0;
+        dx=-dx;
+        }
+        if(loc25y>660){
+        loc25y=660;
+        }
+        }
+	}
+	if(loc25y==435)
+	bubblemoving=false;
 	}
 	if(loc24y>380){
 	DrawAlphabet((alphabets)num[27], loc25x, loc25y, awidth, aheight);
 	}
 	if(loc26y<390 && loc25y>380&&clickcount==26){
-	loc26y=loc26y+8;
+	if (shotx!=-1&&shoty!=-1&&bubblemoving) {
+//        float dx=shotx-loc24x;
+  //      float dy=shoty-loc24y;
+        float distance=sqrt(dx*dx+dy*dy);
+        if(distance>1.0f){
+        float dirx=dx/distance;
+        float diry=dy/distance;
+        
+        loc26x+=dirx*30;
+        loc26y+=diry*30;
+        if(loc26x>870){
+        loc26x=870;
+        dx=-dx;
+        }
+        if(loc26x<0){
+        loc26x=0;
+        dx=-dx;
+        }
+        if(loc26y>660){
+        loc26y=660;
+        }
+        }
+	}
+	if(loc26y==435)
+	bubblemoving=false;
 	}
 	if(loc25y>380){
 	DrawAlphabet((alphabets)num[29], loc26x, loc26y, awidth, aheight);
 	}
 	if(loc27y<390 && loc26y>380&&clickcount==27){
-	loc27y=loc27y+8;
+	if (shotx!=-1&&shoty!=-1&&bubblemoving) {
+//        float dx=shotx-loc24x;
+  //      float dy=shoty-loc24y;
+        float distance=sqrt(dx*dx+dy*dy);
+        if(distance>1.0f){
+        float dirx=dx/distance;
+        float diry=dy/distance;
+        
+        loc27x+=dirx*30;
+        loc27y+=diry*30;
+        if(loc27x>870){
+        loc27x=870;
+        dx=-dx;
+        }
+        if(loc27x<0){
+        loc27x=0;
+        dx=-dx;
+        }
+        if(loc27y>660){
+        loc27y=660;
+        }
+        }
+	}
+	if(loc27y==435)
+	bubblemoving=false;
 	}
 	if(loc26y>380){
 	DrawAlphabet((alphabets)num[30], loc27x, loc27y, awidth, aheight);
@@ -1357,7 +1449,7 @@ void SetCanvasSize(int width, int height) {
 
 void NonPrintableKeys(int key, int x, int y) {
 	if (key == GLUT_KEY_LEFT) {
-        /*  if(loc1y<435&&loc1x>0){
+          if(loc1y<435&&loc1x>0){
 		loc1x=loc1x-15;
 		}
 		//second shoot
@@ -1367,7 +1459,7 @@ void NonPrintableKeys(int key, int x, int y) {
 		//third shoot
 		if(loc2y>400 && (loc3y<435&& loc3x > 0)){
 		loc3x=loc3x-15;
-		}*/
+		}
 		//forth shoot
 		if(loc3y>400 && (loc4y<435&& loc4x > 0)){
 		loc4x=loc4x-15;
@@ -1645,7 +1737,17 @@ displaytime--;
 * */
 int main(int argc, char*argv[]) {
 	InitRandomizer(); // seed the random number generator...
+        InitializeAudio();
+        
+        Mix_Music* bgMusic = Mix_LoadMUS("background.mp3");
+    if (!bgMusic) {
+        cerr << "Failed to load background music: " << Mix_GetError() << endl;
+        CleanupAudio();
+        exit(-1);
+    }
 
+    // Play the background music
+    Mix_PlayMusic(bgMusic, -1); // Loop indefinitely (-1)
 	//Dictionary for matching the words. It contains the 370099 words.
 	dictionary = new string[dictionarysize]; 
 	ReadWords("words_alpha.txt", dictionary); // dictionary is an array of strings
@@ -1682,7 +1784,10 @@ int main(int argc, char*argv[]) {
 	// it deems necessary...
 
 	glutMainLoop();
+        Mix_FreeMusic(bgMusic);
+        CleanupAudio();
 
+  
 	return 1;
 }
 #endif /* */
