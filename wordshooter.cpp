@@ -55,7 +55,6 @@ string tnames[] = { "a.bmp", "b.bmp", "c.bmp", "d.bmp", "e.bmp", "f.bmp", "g.bmp
 GLuint mtid[nalphabets];
 int awidth = 60, aheight = 60; // 60x60 pixels bubbles...
 
-const int shotSpeed = 10;   
 int startdisplay=0;
 int timee=1500;
 int loc1y=18;
@@ -135,16 +134,12 @@ string newforward;
 string backward;
 bool isBubbleBurst[10][15];
 int bubbles[10][15];
-char topalphabets[NUM_ROWS][NUM_COLS] = {
-    {'A', 'E', 'D', 'C', 'B', 'N', 'J', 'Z', 'G', 'L', 'Q', 'M', 'B', 'K','N'},
-    {'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', 'B','M'}
-};
+char topalphabets[NUM_ROWS][NUM_COLS];
 void InitializeAudio() {
     if (SDL_Init(SDL_INIT_AUDIO) < 0) {
         cerr << "Failed to initialize SDL audio: " << SDL_GetError() << endl;
         exit(-1);
     }
-    
     if (Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048) < 0) {
         cerr << "Failed to initialize SDL_mixer: " << Mix_GetError() << endl;
         exit(-1);
@@ -172,10 +167,10 @@ void loadDictionary(std::string* dictionary) {
 bool isWordInDictionary(const std::string& word, std::string* dictionary, int dictionarysize) {
     for (int i = 0; i < dictionarysize; ++i) {
         if (dictionary[i] == word) {
-            return true;  // Word found in dictionary
+            return true; 
         }
     }
-    return false;  // Word not found
+    return false; 
 }
 
 alphabets charToAlphabet(char c){
@@ -183,86 +178,6 @@ alphabets charToAlphabet(char c){
       return static_cast<alphabets>(c - 'A'); 
     }
     return static_cast<alphabets>(-1); 
-}
-void initializeBubbles() {
-    // Initialize isBubbleBurst array to false (no bubbles burst initially)
-    for (int i = 0; i < 10; i++) {
-        for (int j = 0; j < 15; j++) {
-            isBubbleBurst[i][j] = false;  // No bubbles burst initially
-        }
-    }
-}
-void maxlengthword_h() {
-    for (int i = 0; i < 10; i++) {  // Checking words in each row
-        for (int j = 0; j < 15; j++) {
-            for (int k = 14; k >= j + 2; k--) {
-                // Concatenate the word from j to k
-                string newforward = "";
-                string backward = "";
-
-                // Forward concatenation (left to right)
-                for (int l = j; l <= k; l++) {
-                    if (isBubbleBurst[i][l]) {
-                        continue;  // Skip burst bubbles
-                    }
-                    newforward += char(bubbles[i][l] + 97);  // Append lowercase letter
-                }
-
-                // Backward concatenation (right to left)
-                for (int l = k; l >= j; l--) {
-                    if (isBubbleBurst[i][l]) {
-                        continue;  // Skip burst bubbles
-                    }
-                    backward += char(bubbles[i][l] + 97);  // Append lowercase letter
-                }
-
-                // Check if forward or backward word exists in dictionary
-                if (isWordInDictionary(newforward, dictionary, dictionarysize) ||
-                    isWordInDictionary(backward, dictionary, dictionarysize)) {
-                    // Mark these bubbles as burst
-                    for (int l = j; l <= k; l++) {
-                        isBubbleBurst[i][l] = true;
-                    }
-                }
-            }
-        }
-    }
-}
-void maxlengthword_v() {
-    for (int i = 0; i < 15; i++) {  // Checking words in each column
-        for (int j = 0; j < 10; j++) {
-            for (int k = 9; k >= j + 2; k--) {
-                // Concatenate the word from j to k
-                std::string newforward = "";
-                std::string backward = "";
-
-                // Forward concatenation (top to bottom)
-                for (int l = j; l <= k; l++) {
-                    if (isBubbleBurst[l][i]) {
-                        continue;  // Skip burst bubbles
-                    }
-                    newforward += char(bubbles[l][i] + 97);  // Append lowercase letter
-                }
-
-                // Backward concatenation (bottom to top)
-                for (int l = k; l >= j; l--) {
-                    if (isBubbleBurst[l][i]) {
-                        continue;  // Skip burst bubbles
-                    }
-                    backward += char(bubbles[l][i] + 97);  // Append lowercase letter
-                }
-
-                // Check if forward or backward word exists in dictionary
-                if (isWordInDictionary(newforward, dictionary, dictionarysize) ||
-                    isWordInDictionary(backward, dictionary, dictionarysize)) {
-                    // Mark these bubbles as burst
-                    for (int l = j; l <= k; l++) {
-                        isBubbleBurst[l][i] = true;
-                    }
-                }
-            }
-        }
-    }
 }
 
 
@@ -444,11 +359,7 @@ void DrawShooter(int sx, int sy, int cwidth = 60, int cheight = 60)
 * Main Canvas drawing function.
 * */
 void MoveBubble(int shotx,int shoty,int &locx,int &locy){
- // float dx=0;
- // float dy=0;
     if(shotx!=-1&&shoty!=-1){
-        // dx=shotx-locx;
-        // dy=shoty-locy;
         float distance=sqrt(dx*dx+dy*dy);
         if(distance>1.0f&&bubblemoving){
            float dirx=dx/distance;
@@ -462,17 +373,6 @@ void MoveBubble(int shotx,int shoty,int &locx,int &locy){
             if(locx>870){
               locx=870;
               dx=-dx;
-              //bubblemoving=false;
-              //dx=-shotx+locx;
-              //dy=shoty-locy;
-              
-              //float slope=dy/dx;
-              //float newdistance=sqrt(dx*dx+dy*dy);
-              //float dirx=dx/newdistance;
-              //float diry=dy/newdistance;
-              
-              //locx+=dirx*15;
-              //locy+=diry*15;
             }
             if(locx<0){
               locx=0;
@@ -495,53 +395,85 @@ void generateRandomAlphabets(char topalphabets[NUM_ROWS][NUM_COLS]) {
         }
     }
 }
+void initializeBubbles() {
+    for (int i = 0; i < 10; i++) {
+        for (int j = 0; j < 15; j++) {
+            isBubbleBurst[i][j] = false; 
+        }
+    }
+}
+void maxlengthword_h() {
+    for (int i = 0; i < 10; i++) {  
+        for (int j = 0; j < 15; j++) {
+            for (int k = 14; k >= j + 2; k--) {
+                string newforward = "";
+                string backward = "";
+                for (int l = j; l <= k; l++) {
+                    if (isBubbleBurst[i][l]) {
+                        continue;  
+                    }
+                    newforward += char(bubbles[i][l] + 97);  
+                }
+                for (int l = k; l >= j; l--) {
+                    if (isBubbleBurst[i][l]) {
+                        continue;  
+                    }
+                    backward += char(bubbles[i][l] + 97);  
+                }
+
+              if(isWordInDictionary(newforward,dictionary,dictionarysize)||isWordInDictionary(backward,dictionary,dictionarysize)){
+                    for (int l = j; l <= k; l++) {
+                        isBubbleBurst[i][l] = true;
+                        score++;
+                    }
+                }
+            }
+        }
+    }
+}
+void maxlengthword_v() {
+    for(int i=0;i<15;i++){  
+        for(int j=0;j<10;j++){
+            for(int k=9;k>=j+2;k--){
+                std::string newforward = "";
+                std::string backward = "";
+                for (int l = j; l <= k; l++) {
+                    if (isBubbleBurst[l][i]) {
+                        continue;  
+                    }
+                    newforward += char(bubbles[l][i] + 97); 
+                }
+                for (int l = k; l >= j; l--) {
+                    if (isBubbleBurst[l][i]) {
+                        continue; 
+                    }
+                    backward += char(bubbles[l][i] + 97); 
+                }
+
+                if (isWordInDictionary(newforward, dictionary, dictionarysize) ||
+                    isWordInDictionary(backward, dictionary, dictionarysize)) {
+                    for (int l = j; l <= k; l++) {
+                        isBubbleBurst[l][i] = true;
+                        score++;
+                    }
+                }
+            }
+        }
+    }
+}
+
  bool reachedtarget(){
     return locy<=430; 
-    }
-            
+    }         
 void DisplayFunction() {
 	// set the background color using function glClearColor.
 	// to change the background play with the red, green and blue values below.
 	// Note that r, g and b values must be in the range [0,1] where 0 means dim red and 1 means pure red and so on.
 	//#if 0
-	srand(time(0));
 	glClearColor(1/*Red Component*/, 1.0/*Green Component*/,
 		1.0/*Blue Component*/, 0 /*Alpha component*/); // Red==Green==Blue==1 --> White Colour
 	glClear(GL_COLOR_BUFFER_BIT); //Update the colors
 	turn++;
- 
-   /* DrawAlphabet((alphabets)num[0], 10, height - 100, awidth, aheight);  // A
-    DrawAlphabet((alphabets)num[4], 70, height - 100, awidth, aheight); // E
-    DrawAlphabet((alphabets)num[3], 130, height - 100, awidth, aheight); // D
-    DrawAlphabet((alphabets)num[17],190, height - 100, awidth, aheight); // C
-    DrawAlphabet((alphabets)num[1],250, height - 100, awidth, aheight); // B
-    DrawAlphabet((alphabets)num[13],310, height - 100, awidth, aheight); // N
-    DrawAlphabet((alphabets)num[9],370, height - 100, awidth, aheight); // J
-    DrawAlphabet((alphabets)num[25],430, height - 100, awidth, aheight); // 
-    DrawAlphabet((alphabets)num[6],488, height - 100, awidth, aheight); // G
-    DrawAlphabet((alphabets)num[11],545, height - 100, awidth, aheight); // L
-    DrawAlphabet((alphabets)num[16],605, height - 100, awidth, aheight); // Q
-    DrawAlphabet((alphabets)num[12], 665, height - 100, awidth, aheight); // M
-    DrawAlphabet((alphabets)num[15], 725, height - 100, awidth, aheight); // B
-    DrawAlphabet((alphabets)num[21], 785, height - 100, awidth, aheight);
-    DrawAlphabet((alphabets)num[2], 845, height - 100, awidth, aheight);
-    
-    
-    DrawAlphabet((alphabets)num[14], 10, height - 160, awidth, aheight);  // N
-    DrawAlphabet((alphabets)num[19], 70, height - 160, awidth, aheight);  // O
-    DrawAlphabet((alphabets)num[22], 130, height - 160, awidth, aheight); // P
-    DrawAlphabet((alphabets)num[24], 190, height - 160, awidth, aheight); // Q
-    DrawAlphabet((alphabets)num[20], 250, height - 160, awidth, aheight); // R
-    DrawAlphabet((alphabets)num[10], 310, height - 160, awidth, aheight); // S
-    DrawAlphabet((alphabets)num[2], 370, height - 160, awidth, aheight); // T
-    DrawAlphabet((alphabets)num[23], 430, height - 160, awidth, aheight); // U
-    DrawAlphabet((alphabets)num[21], 488, height - 160, awidth, aheight); // V
-    DrawAlphabet((alphabets)num[16], 545, height - 160, awidth, aheight); // W
-    DrawAlphabet((alphabets)num[5], 605, height - 160, awidth, aheight); // X
-    DrawAlphabet((alphabets)num[7], 665, height - 160, awidth, aheight); // Y
-    DrawAlphabet((alphabets)num[8], 725, height - 160, awidth, aheight); // Z
-    DrawAlphabet((alphabets)num[1], 785, height - 160, awidth, aheight);
-    DrawAlphabet((alphabets)num[12], 845, height - 160, awidth, aheight);*/
     if(turn==1){
     generateRandomAlphabets(topalphabets);
     }
@@ -580,9 +512,18 @@ for (int col = 0; col < NUM_COLS; ++col) {
         }
         }
 	}
+	if (loc1y<=height-100&&loc1y<height-160){
+            int targetRow = (loc1y > height - 130) ? 0 : 1; 
+            int targetCol = (loc1x - 10) / 60; 
+            if (targetCol >= 0 && targetCol < NUM_COLS && !isBubbleBurst[targetRow][targetCol]) {
+                topalphabets[targetRow][targetCol] = num[31]; 
+                maxlengthword_h(); 
+                maxlengthword_v(); 
+            }
+        }
+    }
 	//maxlengthword_h();  
        // maxlengthword_v();
-	}
 	DrawAlphabet((alphabets)num[31], loc1x, loc1y, awidth, aheight);
 	
 	//second shoot
@@ -612,9 +553,19 @@ for (int col = 0; col < NUM_COLS; ++col) {
         }
         }
 	}
-	if(loc2y==435)
+	if(loc2y==435){
 	bubblemoving=false;
 	}
+	if (loc2y <= height - 100 && loc2y < height - 160) {
+            int targetRow = (loc2y > height - 130) ? 0 : 1; 
+            int targetCol = (loc2x - 10) / 60; 
+            if (targetCol >= 0 && targetCol < NUM_COLS && !isBubbleBurst[targetRow][targetCol]) {
+                topalphabets[targetRow][targetCol] = num[31]; 
+                maxlengthword_h(); 
+                maxlengthword_v(); 
+            }
+        }
+    }
 	
 	//loc2y=loc2y+8;
 	
@@ -648,9 +599,20 @@ for (int col = 0; col < NUM_COLS; ++col) {
         }
         }
 	}
-	if(loc3y==435)
+	if(loc3y==435){
 	bubblemoving=false;
 	}
+	if (loc3y <= height - 100 && loc3y < height - 160) {
+            int targetRow = (loc3y > height - 130) ? 0 : 1; 
+            int targetCol = (loc3x - 10) / 60; 
+            if (targetCol >= 0 && targetCol < NUM_COLS && !isBubbleBurst[targetRow][targetCol]) {
+                topalphabets[targetRow][targetCol] ; 
+                maxlengthword_h(); 
+                maxlengthword_v(); 
+            }
+        }
+    }
+	
 	//loc3y=loc3y+8;
 	
 	if(loc2y>415){
@@ -1156,8 +1118,8 @@ for (int col = 0; col < NUM_COLS; ++col) {
 	}
 	if(loc20y<390 && loc19y>380&&clickcount==20){
 	if (shotx!=-1&&shoty!=-1&&bubblemoving) {
-        float dx=shotx-loc20x;
-        float dy=shoty-loc20y;
+   //     float dx=shotx-loc20x;
+    //    float dy=shoty-loc20y;
         float distance=sqrt(dx*dx+dy*dy);
         if(distance>1.0f){
         float dirx=dx/distance;
@@ -1186,8 +1148,8 @@ for (int col = 0; col < NUM_COLS; ++col) {
 	}
 	if(loc21y<390 && loc20y>380&&clickcount==21){
 	if (shotx!=-1&&shoty!=-1&&bubblemoving) {
-        float dx=shotx-loc21x;
-        float dy=shoty-loc21y;
+    //    float dx=shotx-loc21x;
+    //    float dy=shoty-loc21y;
         float distance=sqrt(dx*dx+dy*dy);
         if(distance>1.0f){
         float dirx=dx/distance;
@@ -1216,8 +1178,8 @@ for (int col = 0; col < NUM_COLS; ++col) {
 	}
 	if(loc22y<390 && loc21y>380&&clickcount==22){
 	if (shotx!=-1&&shoty!=-1&&bubblemoving) {
-        float dx=shotx-loc22x;
-        float dy=shoty-loc22y;
+   //     float dx=shotx-loc22x;
+     //   float dy=shoty-loc22y;
         float distance=sqrt(dx*dx+dy*dy);
         if(distance>1.0f){
         float dirx=dx/distance;
@@ -1452,8 +1414,8 @@ void NonPrintableKeys(int key, int x, int y) {
           if(loc1y<435&&loc1x>0){
 		loc1x=loc1x-15;
 		}
-		//second shoot
-		if(loc1y>400 && (loc2y<435 && loc2x > 0)){
+		
+		if(loc1y>400 &&(loc2y<435&&loc2x>0)){
 		loc2x=loc2x-15;
 		}
 		//third shoot
@@ -1722,12 +1684,12 @@ void PrintableKeys(unsigned char key, int x, int y) {
 *
 * */
 void Timer(int m) {
-if(timee>0){
-timee--;
-if(timee%10==0){
-displaytime--;
-}
-}
+  if(timee>0){
+  timee--;
+  if(timee%10==0){
+    displaytime--;
+    }
+  }
 	glutPostRedisplay();
 	glutTimerFunc(1000.0/FPS, Timer, 0);
  }
@@ -1736,18 +1698,18 @@ displaytime--;
 * our gateway main function
 * */
 int main(int argc, char*argv[]) {
-	InitRandomizer(); // seed the random number generator...
+	InitRandomizer(); 
         InitializeAudio();
         
-        Mix_Music* bgMusic = Mix_LoadMUS("background.mp3");
-    if (!bgMusic) {
-        cerr << "Failed to load background music: " << Mix_GetError() << endl;
+        Mix_Music* bgMusic=Mix_LoadMUS("background.mp3");
+        if(!bgMusic){
+        cerr<<"Failed to load background music "<<Mix_GetError()<<endl;
         CleanupAudio();
         exit(-1);
-    }
+      }
 
-    // Play the background music
-    Mix_PlayMusic(bgMusic, -1); // Loop indefinitely (-1)
+    
+        Mix_PlayMusic(bgMusic, -1); 
 	//Dictionary for matching the words. It contains the 370099 words.
 	dictionary = new string[dictionarysize]; 
 	ReadWords("words_alpha.txt", dictionary); // dictionary is an array of strings
