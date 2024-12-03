@@ -14,6 +14,7 @@
 #include<cmath>
 #include<fstream>
 #include "util.h"
+
 using namespace std;
 #define MAX(A,B) ((A) > (B) ? (A):(B)) // defining single line functions....
 #define MIN(A,B) ((A) < (B) ? (A):(B))
@@ -55,7 +56,7 @@ int awidth = 60, aheight = 60; // 60x60 pixels bubbles...
 
 const int shotSpeed = 10;   
 int startdisplay=0;
-int timee=12000;
+int timee=1500;
 int loc1y=18;
 int loc1x=465;
 float loc2y=18;//
@@ -112,7 +113,7 @@ int loc27y=18;
 int loc27x=465;
 float locx=18;
 float locy=465;
-
+int displaytime=150;
 const int NUM_COUNT = 50;
 int num[NUM_COUNT]; 
 
@@ -129,16 +130,124 @@ float Distance=0;
 const int NUM_ROWS = 2; 
 const int NUM_COLS = 15; 
 int turn=0;
+string newforward;
+string backward;
+bool isBubbleBurst[10][15];
+int bubbles[10][15];
 char topalphabets[NUM_ROWS][NUM_COLS] = {
     {'A', 'E', 'D', 'C', 'B', 'N', 'J', 'Z', 'G', 'L', 'Q', 'M', 'B', 'K','N'},
     {'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', 'B','M'}
 };
+void loadDictionary(std::string* dictionary) {
+    ifstream file("dictionary.txt");
+    if (!file.is_open()) {
+        cerr << "Error: Could not open dictionary file!" << std::endl;
+        return;
+    }
+
+    string word;
+    int index = 0;
+    while (file >> word && index < dictionarysize) {
+        dictionary[index++] = word; 
+    }
+    file.close();
+}
+bool isWordInDictionary(const std::string& word, std::string* dictionary, int dictionarysize) {
+    for (int i = 0; i < dictionarysize; ++i) {
+        if (dictionary[i] == word) {
+            return true;  // Word found in dictionary
+        }
+    }
+    return false;  // Word not found
+}
+
 alphabets charToAlphabet(char c){
     if(c>='A'&&c<='Z'){
       return static_cast<alphabets>(c - 'A'); 
     }
     return static_cast<alphabets>(-1); 
 }
+void initializeBubbles() {
+    // Initialize isBubbleBurst array to false (no bubbles burst initially)
+    for (int i = 0; i < 10; i++) {
+        for (int j = 0; j < 15; j++) {
+            isBubbleBurst[i][j] = false;  // No bubbles burst initially
+        }
+    }
+}
+void maxlengthword_h() {
+    for (int i = 0; i < 10; i++) {  // Checking words in each row
+        for (int j = 0; j < 15; j++) {
+            for (int k = 14; k >= j + 2; k--) {
+                // Concatenate the word from j to k
+                string newforward = "";
+                string backward = "";
+
+                // Forward concatenation (left to right)
+                for (int l = j; l <= k; l++) {
+                    if (isBubbleBurst[i][l]) {
+                        continue;  // Skip burst bubbles
+                    }
+                    newforward += char(bubbles[i][l] + 97);  // Append lowercase letter
+                }
+
+                // Backward concatenation (right to left)
+                for (int l = k; l >= j; l--) {
+                    if (isBubbleBurst[i][l]) {
+                        continue;  // Skip burst bubbles
+                    }
+                    backward += char(bubbles[i][l] + 97);  // Append lowercase letter
+                }
+
+                // Check if forward or backward word exists in dictionary
+                if (isWordInDictionary(newforward, dictionary, dictionarysize) ||
+                    isWordInDictionary(backward, dictionary, dictionarysize)) {
+                    // Mark these bubbles as burst
+                    for (int l = j; l <= k; l++) {
+                        isBubbleBurst[i][l] = true;
+                    }
+                }
+            }
+        }
+    }
+}
+void maxlengthword_v() {
+    for (int i = 0; i < 15; i++) {  // Checking words in each column
+        for (int j = 0; j < 10; j++) {
+            for (int k = 9; k >= j + 2; k--) {
+                // Concatenate the word from j to k
+                std::string newforward = "";
+                std::string backward = "";
+
+                // Forward concatenation (top to bottom)
+                for (int l = j; l <= k; l++) {
+                    if (isBubbleBurst[l][i]) {
+                        continue;  // Skip burst bubbles
+                    }
+                    newforward += char(bubbles[l][i] + 97);  // Append lowercase letter
+                }
+
+                // Backward concatenation (bottom to top)
+                for (int l = k; l >= j; l--) {
+                    if (isBubbleBurst[l][i]) {
+                        continue;  // Skip burst bubbles
+                    }
+                    backward += char(bubbles[l][i] + 97);  // Append lowercase letter
+                }
+
+                // Check if forward or backward word exists in dictionary
+                if (isWordInDictionary(newforward, dictionary, dictionarysize) ||
+                    isWordInDictionary(backward, dictionary, dictionarysize)) {
+                    // Mark these bubbles as burst
+                    for (int l = j; l <= k; l++) {
+                        isBubbleBurst[l][i] = true;
+                    }
+                }
+            }
+        }
+    }
+}
+
 
 void RegisterTextures_Write()
 {
@@ -425,10 +534,9 @@ void DisplayFunction() {
 
 for (int col = 0; col < NUM_COLS; ++col) {
     DrawAlphabet(charToAlphabet(topalphabets[1][col]), 10 + col * 60, height - 160, awidth, aheight); // Second row
-}
-  
-        
+}    
      if(startdisplay>0 && timee!=0){
+     
 	//shooting alphabet
 	//first shoot
 	if(loc1y<435&&clickcount==1){
@@ -439,8 +547,8 @@ for (int col = 0; col < NUM_COLS; ++col) {
         if(distance>1.0f){
         float dirx=dx/distance;
         float diry=dy/distance;
-        loc1x+=dirx*15;
-        loc1y+=diry*15;
+        loc1x+=dirx*30;
+        loc1y+=diry*30;
         if(loc1x>870){
         loc1x=870;
         dx=-dx;
@@ -451,6 +559,8 @@ for (int col = 0; col < NUM_COLS; ++col) {
         }
         if(loc1y>660){
         loc1y=660;
+        maxlengthword_h();  
+        maxlengthword_v();
         }
         }
 	}
@@ -468,8 +578,8 @@ for (int col = 0; col < NUM_COLS; ++col) {
         float dirx=dx/distance;
         float diry=dy/distance;
         
-        loc2x+=dirx*5;
-        loc2y+=diry*5;
+        loc2x+=dirx*30;
+        loc2y+=diry*30;
         if(loc2x>870){
         loc2x=870;
         dx=-dx;
@@ -503,8 +613,8 @@ for (int col = 0; col < NUM_COLS; ++col) {
         float dirx=dx/distance;
         float diry=dy/distance;
         
-        loc3x+=dirx*15;
-        loc3y+=diry*15;
+        loc3x+=dirx*30;
+        loc3y+=diry*30;
         if(loc3x>870){
         loc3x=870;
         dx=-dx;
@@ -537,8 +647,8 @@ for (int col = 0; col < NUM_COLS; ++col) {
         float dirx=dx/distance;
         float diry=dy/distance;
         
-        loc4x+=dirx*15;
-        loc4y+=diry*15;
+        loc4x+=dirx*30;
+        loc4y+=diry*30;
         if(loc4x>870){
         loc4x=870;
         dx=-dx;
@@ -569,8 +679,8 @@ for (int col = 0; col < NUM_COLS; ++col) {
         float dirx=dx/distance;
         float diry=dy/distance;
         
-        loc5x+=dirx*15;
-        loc5y+=diry*15;
+        loc5x+=dirx*30;
+        loc5y+=diry*30;
         if(loc5x>870){
         loc5x=870;
         dx=-dx;
@@ -601,8 +711,8 @@ for (int col = 0; col < NUM_COLS; ++col) {
         float dirx=dx/distance;
         float diry=dy/distance;
         
-        loc6x+=dirx*15;
-        loc6y+=diry*15;
+        loc6x+=dirx*30;
+        loc6y+=diry*30;
         if(loc6x>870){
         loc6x=870;
         dx=-dx;
@@ -633,8 +743,8 @@ for (int col = 0; col < NUM_COLS; ++col) {
         float dirx=dx/distance;
         float diry=dy/distance;
         
-        loc7x+=dirx*15;
-        loc7y+=diry*15;
+        loc7x+=dirx*30;
+        loc7y+=diry*30;
         if(loc7x>870){
         loc7x=870;
         dx=-dx;
@@ -665,8 +775,8 @@ for (int col = 0; col < NUM_COLS; ++col) {
         float dirx=dx/distance;
         float diry=dy/distance;
         
-        loc8x+=dirx*15;
-        loc8y+=diry*15;
+        loc8x+=dirx*30;
+        loc8y+=diry*30;
         if(loc4x>870){
         loc8x=870;
         dx=-dx;
@@ -697,8 +807,8 @@ for (int col = 0; col < NUM_COLS; ++col) {
         float dirx=dx/distance;
         float diry=dy/distance;
         
-        loc9x+=dirx*15;
-        loc9y+=diry*15;
+        loc9x+=dirx*30;
+        loc9y+=diry*30;
         if(loc9x>870){
         loc4x=870;
         dx=-dx;
@@ -729,8 +839,8 @@ for (int col = 0; col < NUM_COLS; ++col) {
         float dirx=dx/distance;
         float diry=dy/distance;
         
-        loc10x+=dirx*15;
-        loc10y+=diry*15;
+        loc10x+=dirx*30;
+        loc10y+=diry*30;
         if(loc10x>870){
         loc10x=870;
         dx=-dx;
@@ -760,8 +870,8 @@ for (int col = 0; col < NUM_COLS; ++col) {
         float dirx=dx/distance;
         float diry=dy/distance;
         
-        loc11x+=dirx*15;
-        loc11y+=diry*15;
+        loc11x+=dirx*30;
+        loc11y+=diry*30;
         if(loc11x>870){
         loc11x=870;
         dx=-dx;
@@ -791,8 +901,8 @@ for (int col = 0; col < NUM_COLS; ++col) {
         float dirx=dx/distance;
         float diry=dy/distance;
         
-        loc12x+=dirx*15;
-        loc12y+=diry*15;
+        loc12x+=dirx*30;
+        loc12y+=diry*30;
         if(loc12x>870){
         loc12x=870;
         dx=-dx;
@@ -822,8 +932,8 @@ for (int col = 0; col < NUM_COLS; ++col) {
         float dirx=dx/distance;
         float diry=dy/distance;
         
-        loc13x+=dirx*15;
-        loc13y+=diry*15;
+        loc13x+=dirx*30;
+        loc13y+=diry*30;
         if(loc13x>870){
         loc13x=870;
         dx=-dx;
@@ -852,8 +962,8 @@ for (int col = 0; col < NUM_COLS; ++col) {
         float dirx=dx/distance;
         float diry=dy/distance;
         
-        loc14x+=dirx*15;
-        loc14y+=diry*15;
+        loc14x+=dirx*30;
+        loc14y+=diry*30;
         if(loc14x>870){
         loc14x=870;
         dx=-dx;
@@ -882,8 +992,8 @@ for (int col = 0; col < NUM_COLS; ++col) {
         float dirx=dx/distance;
         float diry=dy/distance;
         
-        loc15x+=dirx*15;
-        loc15y+=diry*15;
+        loc15x+=dirx*30;
+        loc15y+=diry*30;
         if(loc15x>870){
         loc15x=870;
         dx=-dx;
@@ -913,8 +1023,8 @@ for (int col = 0; col < NUM_COLS; ++col) {
         float dirx=dx/distance;
         float diry=dy/distance;
         
-        loc16x+=dirx*15;
-        loc16y+=diry*15;
+        loc16x+=dirx*30;
+        loc16y+=diry*30;
         if(loc16x>870){
         loc16x=870;
         dx=-dx;
@@ -943,8 +1053,8 @@ for (int col = 0; col < NUM_COLS; ++col) {
         float dirx=dx/distance;
         float diry=dy/distance;
         
-        loc17x+=dirx*15;
-        loc17y+=diry*15;
+        loc17x+=dirx*30;
+        loc17y+=diry*30;
         if(loc17x>870){
         loc17x=870;
         dx=-dx;
@@ -973,8 +1083,8 @@ for (int col = 0; col < NUM_COLS; ++col) {
         float dirx=dx/distance;
         float diry=dy/distance;
         
-        loc18x+=dirx*15;
-        loc18y+=diry*15;
+        loc18x+=dirx*30;
+        loc18y+=diry*30;
         if(loc18x>870){
         loc18x=870;
         dx=-dx;
@@ -1003,8 +1113,8 @@ for (int col = 0; col < NUM_COLS; ++col) {
         float dirx=dx/distance;
         float diry=dy/distance;
         
-        loc19x+=dirx*15;
-        loc19y+=diry*15;
+        loc19x+=dirx*30;
+        loc19y+=diry*30;
         if(loc19x>870){
         loc19x=870;
         dx=-dx;
@@ -1033,8 +1143,8 @@ for (int col = 0; col < NUM_COLS; ++col) {
         float dirx=dx/distance;
         float diry=dy/distance;
         
-        loc20y+=dirx*15;
-        loc20y+=diry*15;
+        loc20y+=dirx*30;
+        loc20y+=diry*30;
         if(loc20x>870){
         loc20x=870;
         dx=-dx;
@@ -1063,8 +1173,8 @@ for (int col = 0; col < NUM_COLS; ++col) {
         float dirx=dx/distance;
         float diry=dy/distance;
         
-        loc21x+=dirx*15;
-        loc21y+=diry*15;
+        loc21x+=dirx*30;
+        loc21y+=diry*30;
         if(loc21x>870){
         loc21x=870;
         dx=-dx;
@@ -1093,8 +1203,8 @@ for (int col = 0; col < NUM_COLS; ++col) {
         float dirx=dx/distance;
         float diry=dy/distance;
         
-        loc22x+=dirx*15;
-        loc22y+=diry*15;
+        loc22x+=dirx*30;
+        loc22y+=diry*30;
         if(loc22x>870){
         loc22x=870;
         dx=-dx;
@@ -1124,8 +1234,8 @@ for (int col = 0; col < NUM_COLS; ++col) {
         float dirx=dx/distance;
         float diry=dy/distance;
         
-        loc23x+=dirx*15;
-        loc23y+=diry*15;
+        loc23x+=dirx*30;
+        loc23y+=diry*30;
         if(loc23x>870){
         loc23x=870;
         dx=-dx;
@@ -1154,8 +1264,8 @@ for (int col = 0; col < NUM_COLS; ++col) {
         float dirx=dx/distance;
         float diry=dy/distance;
         
-        loc24x+=dirx*15;
-        loc24y+=diry*15;
+        loc24x+=dirx*30;
+        loc24y+=diry*30;
         if(loc24x>870){
         loc24x=870;
         dx=-dx;
@@ -1196,7 +1306,7 @@ for (int col = 0; col < NUM_COLS; ++col) {
     
 	DrawString(40, height - 20, width, height + 5, "Score " + Num2Str(score), colors[BLUE_VIOLET]);
 	DrawString(width / 2 - 30, height - 25, width, height,
-		"Time Left:" + Num2Str(timee) + " secs", colors[RED]);
+		"Time Left:" + Num2Str(displaytime) + " secs", colors[RED]);
 	DrawString(80, height - 20, 500, height + 5, "Nauman Rafay\t24i-2558 ", colors[BLUE_VIOLET]);
 		
 	//end of game
@@ -1213,9 +1323,9 @@ for (int col = 0; col < NUM_COLS; ++col) {
 	DrawString(425, 310, width, height + 5, "Final Score: " + Num2Str(score), colors[BLUE_VIOLET]);
 	DrawString(235, 50, width, height + 5, "-" , colors[WHITE]);
 	}
-	if(timee>0 && startdisplay>=1){
-	timee--;
-	}
+//	if(timee>0 && startdisplay>=1){
+//	timee--;
+//	}
 
 	// #----------------- Write your code till here ----------------------------#
 	//DO NOT MODIFY THESE LINES
@@ -1520,8 +1630,14 @@ void PrintableKeys(unsigned char key, int x, int y) {
 *
 * */
 void Timer(int m) {
+if(timee>0){
+timee--;
+if(timee%10==0){
+displaytime--;
+}
+}
 	glutPostRedisplay();
-	glutTimerFunc(100.0/FPS, Timer, 0);
+	glutTimerFunc(1000.0/FPS, Timer, 0);
  }
 
 /*
@@ -1559,11 +1675,11 @@ int main(int argc, char*argv[]) {
 	glutMouseFunc(MouseClicked);
 	glutPassiveMotionFunc(MouseMoved); // Mouse
           
-	 This functiontells the library to call our Timer function after 1000.0/FPS milliseconds...
-	glutTimerFunc(1000.0/FPS, Timer, 0);
+	 //This functiontells the library to call our Timer function after 1000.0/FPS milliseconds...
+	glutTimerFunc(10000.0/FPS, Timer, 0);
 
-	 now handle the control to library and it will call our registered functions when
-	 it deems necessary...
+	// now handle the control to library and it will call our registered functions when
+	// it deems necessary...
 
 	glutMainLoop();
 
