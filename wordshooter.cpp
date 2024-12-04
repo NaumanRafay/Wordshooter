@@ -59,8 +59,8 @@ int startdisplay=0;
 int timee=1500;
 int loc1y=18;
 int loc1x=465;
-float loc2y=18;//
-float loc2x=465;//
+int loc2y=18;
+int loc2x=465;
 int loc3y=18;
 int loc3x=465;
 int loc4y=18;
@@ -120,28 +120,31 @@ int num[NUM_COUNT];
 float shotx=-1;
 float shoty=-1;
 bool bubblemoving=false;
-float speed=5.0f;
 
 bool boundarycheck;
 int clickcount=0;
 float dx=0;
 float dy=0;
-float Distance=0;
-const int NUM_ROWS = 2; 
-const int NUM_COLS = 15; 
+const int NUM_ROWS=2; 
+const int NUM_COLS=15; 
 int turn=0;
 string newforward;
 string backward;
 bool isBubbleBurst[10][15];
 int bubbles[10][15];
 char topalphabets[NUM_ROWS][NUM_COLS];
-void InitializeAudio() {
-    if (SDL_Init(SDL_INIT_AUDIO) < 0) {
-        cerr << "Failed to initialize SDL audio: " << SDL_GetError() << endl;
+
+
+
+
+
+void InitializeAudio(){
+    if (SDL_Init(SDL_INIT_AUDIO)<0){
+        cerr<<"Failed to initialize SDL audio:"<<SDL_GetError()<<endl;
         exit(-1);
     }
-    if (Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048) < 0) {
-        cerr << "Failed to initialize SDL_mixer: " << Mix_GetError() << endl;
+    if(Mix_OpenAudio(44100,MIX_DEFAULT_FORMAT,2,2048)<0){
+        cerr<<"Failed to initialize SDL_mixer "<<Mix_GetError()<<endl;
         exit(-1);
     }
 }
@@ -358,77 +361,47 @@ void DrawShooter(int sx, int sy, int cwidth = 60, int cheight = 60)
 /*
 * Main Canvas drawing function.
 * */
-void MoveBubble(int shotx,int shoty,int &locx,int &locy){
-    if(shotx!=-1&&shoty!=-1){
-        float distance=sqrt(dx*dx+dy*dy);
-        if(distance>1.0f&&bubblemoving){
-           float dirx=dx/distance;
-           float diry=dy/distance;
-            locx+=dirx*2; 
-            locy+=diry*2; 
-            }
-            locx+=dx;
-            locy+=dy;
-           
-            if(locx>870){
-              locx=870;
-              dx=-dx;
-            }
-            if(locx<0){
-              locx=0;
-              dx=-dx;
-            }
-            if(locy>660){
-              locy=660;
-              dy=-dy;
-            }
-        
-    }
-}
 void generateRandomAlphabets(char topalphabets[NUM_ROWS][NUM_COLS]) {
-    for (int i = 0; i < NUM_ROWS; i++) {
-        for (int j = 0; j < NUM_COLS; j++) {
-            // Generate a random index from 0 to 25
-            int randomIndex = rand() % 26;
-            // Convert index to corresponding alphabet character
-            topalphabets[i][j] = 'A' + randomIndex; // 'A' + 0 = 'A', 'A' + 1 = 'B', etc.
+    for(int i=0;i<NUM_ROWS;i++){ 
+        for(int j=0;j<NUM_COLS;j++){
+            int randomIndex=rand()%26;
+            topalphabets[i][j]='A'+randomIndex;
         }
     }
 }
-void initializeBubbles() {
-    for (int i = 0; i < 10; i++) {
-        for (int j = 0; j < 15; j++) {
-            isBubbleBurst[i][j] = false; 
+void initializeBubbles(){
+    for(int i=0;i<10;i++){
+      for(int j=0;j<15;j++){
+         isBubbleBurst[i][j]=false; 
         }
     }
 }
-void maxlengthword_h() {
-    for (int i = 0; i < 10; i++) {  
-        for (int j = 0; j < 15; j++) {
-            for (int k = 14; k >= j + 2; k--) {
-                string newforward = "";
-                string backward = "";
-                for (int l = j; l <= k; l++) {
-                    if (isBubbleBurst[i][l]) {
+void maxlengthword_h(){
+    for(int i=0;i<10;i++){  
+        for(int j=0;j<15;j++) {
+          for(int k=14;k>=j+2;k--){
+                string newforward="";
+                string backward="";
+                for(int l=j;l<=k;l++){
+                    if(isBubbleBurst[i][l]){
+                        continue;  
+                     }
+                    newforward+=char(bubbles[i][l]+97);  
+                }
+                for(int l=k;l>=j;l--){
+                    if(isBubbleBurst[i][l]){
                         continue;  
                     }
-                    newforward += char(bubbles[i][l] + 97);  
+                    backward+=char(bubbles[i][l]+97);  
                 }
-                for (int l = k; l >= j; l--) {
-                    if (isBubbleBurst[i][l]) {
-                        continue;  
-                    }
-                    backward += char(bubbles[i][l] + 97);  
-                }
-
-              if(isWordInDictionary(newforward,dictionary,dictionarysize)||isWordInDictionary(backward,dictionary,dictionarysize)){
-                    for (int l = j; l <= k; l++) {
-                        isBubbleBurst[i][l] = true;
-                        score++;
-                    }
-                }
+      if(isWordInDictionary(newforward,dictionary,dictionarysize)||isWordInDictionary(backward,dictionary,dictionarysize)){
+        for (int l = j; l <= k; l++) {
+            isBubbleBurst[i][l] = true;
+                score++;
+              }
             }
-        }
+          }
+      }
     }
 }
 void maxlengthword_v() {
@@ -441,30 +414,27 @@ void maxlengthword_v() {
                     if (isBubbleBurst[l][i]) {
                         continue;  
                     }
-                    newforward += char(bubbles[l][i] + 97); 
+                    newforward+=char(bubbles[l][i]+97); 
                 }
-                for (int l = k; l >= j; l--) {
-                    if (isBubbleBurst[l][i]) {
-                        continue; 
+                for(int l=k;l>=j;l--){
+                    if(isBubbleBurst[l][i]){
+                      continue; 
                     }
-                    backward += char(bubbles[l][i] + 97); 
+                    backward+=char(bubbles[l][i]+97); 
                 }
-
-                if (isWordInDictionary(newforward, dictionary, dictionarysize) ||
-                    isWordInDictionary(backward, dictionary, dictionarysize)) {
-                    for (int l = j; l <= k; l++) {
-                        isBubbleBurst[l][i] = true;
-                        score++;
-                    }
-                }
+      if(isWordInDictionary(newforward,dictionary,dictionarysize)||isWordInDictionary(backward,dictionary,dictionarysize)){
+          for (int l=j;l<=k;l++){
+              isBubbleBurst[l][i]=true;
+                score++;
+              }
             }
+          }
         }
     }
 }
-
- bool reachedtarget(){
-    return locy<=430; 
-    }         
+bool reachedtarget(){
+  return locy<=430; 
+}         
 void DisplayFunction() {
 	// set the background color using function glClearColor.
 	// to change the background play with the red, green and blue values below.
@@ -477,17 +447,14 @@ void DisplayFunction() {
     if(turn==1){
     generateRandomAlphabets(topalphabets);
     }
-    for (int col = 0; col < NUM_COLS; ++col) {
-    DrawAlphabet(charToAlphabet(topalphabets[0][col]), 10 + col * 60, height - 100, awidth, aheight); // First row
+    for (int col=0;col<NUM_COLS;++col){
+    DrawAlphabet(charToAlphabet(topalphabets[0][col]),10+col*60,height-100, awidth, aheight);
 }
-
-for (int col = 0; col < NUM_COLS; ++col) {
-    DrawAlphabet(charToAlphabet(topalphabets[1][col]), 10 + col * 60, height - 160, awidth, aheight); // Second row
+    for(int col=0;col<NUM_COLS;++col){
+    DrawAlphabet(charToAlphabet(topalphabets[1][col]),10+col*60,height-160,awidth,aheight); 
 }    
      if(startdisplay>0 && timee!=0){
-     
 	//shooting alphabet
-	//first shoot
 	if(loc1y<435&&clickcount==1){
 	if (shotx!=-1&&shoty!=-1&&reachedtarget){
         //float dx=shotx-loc1x;
@@ -512,21 +479,19 @@ for (int col = 0; col < NUM_COLS; ++col) {
         }
         }
 	}
-	if (loc1y<=height-100&&loc1y<height-160){
-            int targetRow = (loc1y > height - 130) ? 0 : 1; 
-            int targetCol = (loc1x - 10) / 60; 
-            if (targetCol >= 0 && targetCol < NUM_COLS && !isBubbleBurst[targetRow][targetCol]) {
-                topalphabets[targetRow][targetCol] = num[31]; 
-                maxlengthword_h(); 
-                maxlengthword_v(); 
+	/*if (loc1y<=height-100&&loc1y<height-160){
+            int targetRow=(loc1y>height-130)?0:1; 
+            int targetCol=(loc1x-10)/60; 
+            if(targetCol>=0&&targetCol<NUM_COLS&&!isBubbleBurst[targetRow][targetCol]){
+              topalphabets[targetRow][targetCol]; 
+              maxlengthword_h(); 
+              maxlengthword_v(); 
             }
-        }
+        }*/
     }
 	//maxlengthword_h();  
        // maxlengthword_v();
 	DrawAlphabet((alphabets)num[31], loc1x, loc1y, awidth, aheight);
-	
-	//second shoot
 	
 	if(loc2y<435 && loc1y>415&&clickcount==2){
 	if (shotx!=-1&&shoty!=-1&&bubblemoving) {
@@ -556,24 +521,21 @@ for (int col = 0; col < NUM_COLS; ++col) {
 	if(loc2y==435){
 	bubblemoving=false;
 	}
-	if (loc2y <= height - 100 && loc2y < height - 160) {
-            int targetRow = (loc2y > height - 130) ? 0 : 1; 
-            int targetCol = (loc2x - 10) / 60; 
-            if (targetCol >= 0 && targetCol < NUM_COLS && !isBubbleBurst[targetRow][targetCol]) {
-                topalphabets[targetRow][targetCol] = num[31]; 
-                maxlengthword_h(); 
-                maxlengthword_v(); 
+	/*if(loc2y<=height-100&&loc2y<height-160){
+          int targetRow=(loc2y>height-130)?0:1; 
+          int targetCol=(loc2x-10)/60; 
+            if(targetCol>=0&&targetCol<NUM_COLS&&!isBubbleBurst[targetRow][targetCol]){
+              topalphabets[targetRow][targetCol];
+              maxlengthword_h(); 
+              maxlengthword_v(); 
             }
-        }
+        }*/
     }
-	
-	//loc2y=loc2y+8;
-	
 	if(loc1y>415){
 	DrawAlphabet((alphabets)num[32], loc2x, loc2y, awidth, aheight);
 	}
 	
-	//third shoot
+	
 	if(loc3y<435 && loc2y>415&&clickcount==3){
 	if (shotx!=-1&&shoty!=-1&&bubblemoving) {
         //float dx=shotx-loc3x;
@@ -602,15 +564,15 @@ for (int col = 0; col < NUM_COLS; ++col) {
 	if(loc3y==435){
 	bubblemoving=false;
 	}
-	if (loc3y <= height - 100 && loc3y < height - 160) {
-            int targetRow = (loc3y > height - 130) ? 0 : 1; 
-            int targetCol = (loc3x - 10) / 60; 
-            if (targetCol >= 0 && targetCol < NUM_COLS && !isBubbleBurst[targetRow][targetCol]) {
-                topalphabets[targetRow][targetCol] ; 
+	/*if(loc3y<=height-100&&loc3y<height-160){
+            int targetRow=(loc3y>height-130)?0:1; 
+            int targetCol=(loc3x-10)/60; 
+            if(targetCol>=0&&targetCol<NUM_COLS&&!isBubbleBurst[targetRow][targetCol]) {
+                topalphabets[targetRow][targetCol]; 
                 maxlengthword_h(); 
                 maxlengthword_v(); 
             }
-        }
+        }*/
     }
 	
 	//loc3y=loc3y+8;
@@ -648,7 +610,7 @@ for (int col = 0; col < NUM_COLS; ++col) {
 	bubblemoving=false;
 	}
 	if(loc3y>415){
-	DrawAlphabet((alphabets)num[34], loc4x, loc4y, awidth, aheight);
+	DrawAlphabet((alphabets)num[34],loc4x,loc4y,awidth,aheight);
 	}
 	
 	//fifth shoot
@@ -1410,197 +1372,192 @@ void SetCanvasSize(int width, int height) {
 * */
 
 void NonPrintableKeys(int key, int x, int y) {
-	if (key == GLUT_KEY_LEFT) {
+	if (key==GLUT_KEY_LEFT) {
           if(loc1y<435&&loc1x>0){
 		loc1x=loc1x-15;
 		}
-		
 		if(loc1y>400 &&(loc2y<435&&loc2x>0)){
 		loc2x=loc2x-15;
 		}
 		//third shoot
-		if(loc2y>400 && (loc3y<435&& loc3x > 0)){
+		if(loc2y>400 &&(loc3y<435&&loc3x>0)){
 		loc3x=loc3x-15;
 		}
 		//forth shoot
-		if(loc3y>400 && (loc4y<435&& loc4x > 0)){
+		if(loc3y>400 &&(loc4y<435&&loc4x>0)){
 		loc4x=loc4x-15;
 		}
 		//fifth shoot
-		if(loc4y>400 && (loc5y<435&& loc5x > 0)){
+		if(loc4y>400 &&(loc5y<435&&loc5x>0)){
 		loc5x=loc5x-15;
 		}
 		//sixth shoot
-		if(loc5y>400 && (loc6y<435&&loc6x>0)){
+		if(loc5y>400&&(loc6y<435&&loc6x>0)){
 		loc6x=loc6x-15;
 		}
 		//seventh shoot
-		if(loc6y>400 && (loc7y<435&& loc7x > 0)){
+		if(loc6y>400&&(loc7y<435&&loc7x>0)){
 		loc7x=loc7x-15;
 		}
 		//eighth shoot
-		if(loc7y>400 && (loc8y<435&&loc8x>0)){
+		if(loc7y>400&&(loc8y<435&&loc8x>0)){
 		loc8x=loc8x-15;
 		}
 		//ninth shoot
-		if(loc8y>400 && (loc9y<435&&loc9x>0)){
+		if(loc8y>400&&(loc9y<435&&loc9x>0)){
 		loc9x=loc9x-15;
 		}
 		//tenth shoot
-		if(loc9y>400 && (loc10y<435&&loc10x>0)){
+		if(loc9y>400&&(loc10y<435&&loc10x>0)){
 		loc10x=loc10x-15;
 		}
 		//eleventh shoot
-		if(loc10y>400 && (loc11y<435&&loc11x>0)){
+		if(loc10y>400&&(loc11y<435&&loc11x>0)){
 		loc11x=loc11x-15;
 		}
 		//twelveth shoot
-		if(loc11y>400 && (loc12y<435&&loc12x>0)){
+		if(loc11y>400&&(loc12y<435&&loc12x>0)){
 		loc12x=loc12x-15;
 		}
 		//thirteenth shoot
-		if(loc12y>400 && (loc13y<435&&loc13x>0)){
+		if(loc12y>400&&(loc13y<435&&loc13x>0)){
 		loc13x=loc13x-15;
 		}
-		if(loc13y>400 && (loc14y<435&&loc14x>0)){
+		if(loc13y>400&&(loc14y<435&&loc14x>0)){
 		loc14x=loc14x-15;
 		}
-		if(loc14y>400 && (loc15y<435&&loc15x>0)){
+		if(loc14y>400&&(loc15y<435&&loc15x>0)){
 		loc15x=loc15x-15;
 		}
-		if(loc15y>380 && (loc16y<380&&loc16x>0)){
+		if(loc15y>380&&(loc16y<380&&loc16x>0)){
 		loc16x=loc16x-15;
 		}
-		if(loc16y>380 && (loc17y<380&&loc17x>0)){
+		if(loc16y>380&&(loc17y<380&&loc17x>0)){
 		loc17x=loc17x-15;
 		}
-		if(loc17y>380 && (loc18y<380&&loc18x>0)){
+		if(loc17y>380&&(loc18y<380&&loc18x>0)){
 		loc18x=loc18x-15;
 		}
-		if(loc18y>380 && (loc19y<380&&loc19x>0)){
+		if(loc18y>380&&(loc19y<380&&loc19x>0)){
 		loc19x=loc19x-15;
 		}
-		if(loc19y>380 && (loc20y<380&&loc20x>0)){
+		if(loc19y>380&&(loc20y<380&&loc20x>0)){
 		loc20x=loc20x-15;
 		}
-		if(loc20y>380 && (loc21y<380&&loc21x>0)){
+		if(loc20y>380&&(loc21y<380&&loc21x>0)){
 		loc21x=loc21x-15;
 		}
-		if(loc21y>380 && (loc22y<380&&loc22x>0)){
+		if(loc21y>380&&(loc22y<380&&loc22x>0)){
 		loc22x=loc22x-15;
 		}
-		if(loc22y>380 && (loc23y<380&&loc23x>0)){
+		if(loc22y>380&&(loc23y<380&&loc23x>0)){
 		loc23x=loc23x-15;
 		}
-		if(loc23y>380 && (loc24y<380&&loc24x>0)){
+		if(loc23y>380&&(loc24y<380&&loc24x>0)){
 		loc24x=loc24x-15;
 		}
-		if(loc24y>380 && (loc25y<380&&loc25x>0)){
+		if(loc24y>380&&(loc25y<380&&loc25x>0)){
 		loc25x=loc25x-15;
 		}
-		if(loc25y>380 && (loc26y<380&&loc26x>0)){
+		if(loc25y>380&&(loc26y<380&&loc26x>0)){
 		loc26x=loc26x-15;
 		}
-		if(loc26y>380 && (loc27y<380&&loc27x>0)){
+		if(loc26y>380&&(loc27y<380&&loc27x>0)){
 		loc27x=loc27x-15;
 		}
-	      
 	}
 	else if (key == GLUT_KEY_RIGHT /*GLUT_KEY_RIGHT is constant and contains ASCII for right arrow key*/) {
-           // if (shooterX < width - bwidth) {
-            //shooterX += shooterSpeed;
-        //}
         
-               /*if(loc1y<435&&loc1x<870){
+               if(loc1y<435&&loc1x<870){
 		loc1x=loc1x+15;
 		}
 		//second shoot
-		if(loc1y>400 && (loc2y<435&&loc2x<870)){
+		if(loc1y>400&&(loc2y<435&&loc2x<870)){
 		loc2x=loc2x+15;
 		}
 		//third shoot
-		if(loc2y>400 && (loc3y<435&&loc3x<870)){
+		if(loc2y>400&&(loc3y<435&&loc3x<870)){
 		loc3x=loc3x+15;
-		}*/
+		}
 		//forth shoot
-		if(loc3y>400 && (loc4y<435&&loc4x<870)){
+		if(loc3y>400&&(loc4y<435&&loc4x<870)){
 		loc4x=loc4x+15;
 		}
 		//fifth shoot
-		if(loc4y>400 && (loc5y<435&&loc5x<870)){
+		if(loc4y>400&&(loc5y<435&&loc5x<870)){
 		loc5x=loc5x+15;
 		}
 		//sixth shoot
-		if(loc5y>400 && (loc6y<435&&loc6x<870)){
+		if(loc5y>400&&(loc6y<435&&loc6x<870)){
 		loc6x=loc6x+15;
 		}
 		//seventh shoot
-		if(loc6y>400 && (loc7y<435&&loc7x<870)){
+		if(loc6y>400&&(loc7y<435&&loc7x<870)){
 		loc7x=loc7x+15;
 		}
 		//eighth shoot
-		if(loc7y>400 && (loc8y<435&&loc8x<870)){
+		if(loc7y>400&&(loc8y<435&&loc8x<870)){
 		loc8x=loc8x+15;
 		}
 		//ninth shoot
-		if(loc8y>400 && (loc9y<435&&loc9x<870)){
+		if(loc8y>400&&(loc9y<435&&loc9x<870)){
 		loc9x=loc9x+15;
 		}
 		//tenth shoot
-		if(loc9y>400 && (loc10y<435&&loc10x<870)){
+		if(loc9y>400&&(loc10y<435&&loc10x<870)){
 		loc10x=loc10x+15;
 		}
 		//eleventh shoot
-		if(loc10y>400 && (loc11y<435&&loc11x<870)){
+		if(loc10y>400&&(loc11y<435&&loc11x<870)){
 		loc11x=loc11x+15;
 		}
 		//twelveth shoot
-		if(loc11y>400 && (loc12y<435&&loc12x<870)){
+		if(loc11y>400&&(loc12y<435&&loc12x<870)){
 		loc12x=loc12x+15;
 		}
-		if(loc12y>400 && (loc13y<435&&loc13x<870)){
+		if(loc12y>400&&(loc13y<435&&loc13x<870)){
 		loc13x=loc13x+15;
 		}
-		if(loc13y>400 && (loc14y<435&&loc14x<870)){
+		if(loc13y>400&&(loc14y<435&&loc14x<870)){
 		loc14x=loc14x+15;
 		}
-		if(loc14y>400 && (loc15y<435&&loc15x<870)){
+		if(loc14y>400&&(loc15y<435&&loc15x<870)){
 		loc15x=loc15x+15;
 		}
-		if(loc15y>380 && (loc16y<380&&loc16x<870)){
+		if(loc15y>380&&(loc16y<380&&loc16x<870)){
 		loc16x=loc16x+15;
 		}
-		if(loc16y>380 && (loc17y<380&&loc17x<870)){
+		if(loc16y>380&&(loc17y<380&&loc17x<870)){
 		loc17x=loc17x+15;
 		}
-		if(loc17y>380 && (loc18y<380&&loc18x<870)){
+		if(loc17y>380&&(loc18y<380&&loc18x<870)){
 		loc18x=loc18x+15;
 		}
-		if(loc18y>380 && (loc19y<380&&loc19x<870)){
+		if(loc18y>380&&(loc19y<380&&loc19x<870)){
 		loc19x=loc19x+15;
 		}
-		if(loc19y>380 && (loc20y<380&&loc20x<870)){
+		if(loc19y>380&&(loc20y<380&&loc20x<870)){
 		loc20x=loc20x+15;
 		}
-		if(loc20y>380 && (loc21y<380&&loc21x<870)){
+		if(loc20y>380&&(loc21y<380&&loc21x<870)){
 		loc21x=loc21x+15;
 		}
-		if(loc21y>380 && (loc22y<380&&loc22x<870)){
+		if(loc21y>380&&(loc22y<380&&loc22x<870)){
 		loc22x=loc22x+15;
 		}
-		if(loc22y>380 && (loc23y<380&&loc23x<870)){
+		if(loc22y>380&&(loc23y<380&&loc23x<870)){
 		loc23x=loc23x+15;
 		}
-		if(loc23y>380 && (loc24y<380&&loc24x<870)){
+		if(loc23y>380&&(loc24y<380&&loc24x<870)){
 		loc24x=loc24x+15;
 		}
-		if(loc24y>380 && (loc25y<380&&loc25x<870)){
+		if(loc24y>380&&(loc25y<380&&loc25x<870)){
 		loc25x=loc25x+15;
 		}
-		if(loc25y>380 && (loc26y<380&&loc26x<870)){
+		if(loc25y>380&&(loc26y<380&&loc26x<870)){
 		loc26x=loc26x+15;
 		}
-		if(loc26y>380 && (loc27y<380&&loc27x<870)){
+		if(loc26y>380&&(loc27y<380&&loc27x<870)){
 		loc27x=loc27x+15;
 		}
 	}
@@ -1646,8 +1603,8 @@ void MouseClicked(int button, int state, int x, int y) {
 		
 		  clickcount++;
                   startdisplay++;
-                  shotx =x-435; 
-                  shoty =400+y;
+                  shotx=x-435; 
+                  shoty=400+y;
                   bubblemoving=true;
                   dx=shotx-locx;
                   dy=shoty-locy;
