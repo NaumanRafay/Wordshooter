@@ -134,10 +134,6 @@ bool isBubbleBurst[10][15];
 int bubbles[10][15];
 char topalphabets[NUM_ROWS][NUM_COLS];
 
-
-
-
-
 void InitializeAudio(){
     if (SDL_Init(SDL_INIT_AUDIO)<0){
         cerr<<"Failed to initialize SDL audio:"<<SDL_GetError()<<endl;
@@ -153,6 +149,10 @@ void CleanupAudio() {
     Mix_CloseAudio();
     SDL_Quit();
 }
+
+
+
+
 void loadDictionary(std::string* dictionary) {
     ifstream file("dictionary.txt");
     if (!file.is_open()) {
@@ -447,10 +447,10 @@ void DisplayFunction() {
     if(turn==1){
     generateRandomAlphabets(topalphabets);
     }
-    for (int col=0;col<NUM_COLS;++col){
+    for (int col=0;col<NUM_COLS;col++){
     DrawAlphabet(charToAlphabet(topalphabets[0][col]),10+col*60,height-100, awidth, aheight);
 }
-    for(int col=0;col<NUM_COLS;++col){
+    for(int col=0;col<NUM_COLS;col++){
     DrawAlphabet(charToAlphabet(topalphabets[1][col]),10+col*60,height-160,awidth,aheight); 
 }    
      if(startdisplay>0 && timee!=0){
