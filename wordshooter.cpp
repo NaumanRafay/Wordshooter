@@ -57,84 +57,20 @@ int awidth = 60, aheight = 60; // 60x60 pixels bubbles...
 
 int startdisplay=0;
 int timee=1500;
-int loc1y=18;
-int loc1x=465;
-int loc2y=18;
-int loc2x=465;
-int loc3y=18;
-int loc3x=465;
-int loc4y=18;
-int loc4x=465;
-int loc5y=18;
-int loc5x=465;
-int loc6y=18;
-int loc6x=465;
-int loc7y=18;
-int loc7x=465;
-int loc8y=18;
-int loc8x=465;
-int loc9y=18;
-int loc9x=465;
-int loc10y=18;
-int loc10x=465;
-int loc11y=18;
-int loc11x=465;
-int loc12y=18;
-int loc12x=465;
-int loc13y=18;
-int loc13x=465;
-int loc14y=18;
-int loc14x=465;
-int loc15y=18;
-int loc15x=465;
-int loc16y=18;
-int loc16x=465;
-int loc17y=18;
-int loc17x=465;
-int loc18y=18;
-int loc18x=465;
-int loc19y=18;
-int loc19x=465;
-int loc20y=18;
-int loc20x=465;
-int loc21y=18;
-int loc21x=465;
-int loc22y=18;
-int loc22x=465;
-int loc23y=18;
-int loc23x=465;
-int loc24y=18;
-int loc24x=465;
-int loc25y=18;
-int loc25x=465;
-int loc26y=18;
-int loc26x=465;
-int loc27y=18;
-int loc27x=465;
-float locx=18;
-float locy=465;
 int displaytime=150;
-const int NUM_COUNT = 50;
-int num[NUM_COUNT]; 
-
-float shotx=-1;
-float shoty=-1;
-bool bubblemoving=false;
-
-bool boundarycheck;
-int clickcount=0;
 float dx=0;
 float dy=0;
-const int NUM_ROWS=2; 
-const int NUM_COLS=15; 
-int turn=0;
-string newforward;
-string backward;
-bool isBubbleBurst[10][15];
-int bubbles[10][15];
-char topalphabets[NUM_ROWS][NUM_COLS];
-
-void InitializeAudio(){
+int alphabetGrid[5][15];
+int ball=0;
+float speedx=0;  
+float speedy=0;
+int locx=width/2;  
+int locy=0;          
+bool ballLaunched=false;  
+bool gameover=false; 
+int globally=0;
+int arr[26]={19, 0, 18, 25, 10, 5, 15, 1, 4, 17, 12, 13, 2, 14, 3, 6, 7, 8, 9, 20, 11, 16, 21, 22, 23, 24};
+void initializeaudio(){
     if (SDL_Init(SDL_INIT_AUDIO)<0){
         cerr<<"Failed to initialize SDL audio:"<<SDL_GetError()<<endl;
         exit(-1);
@@ -145,44 +81,153 @@ void InitializeAudio(){
     }
 }
 
-void CleanupAudio() {
+void cleanupaudio(){
     Mix_CloseAudio();
     SDL_Quit();
 }
 
-
-
-
-void loadDictionary(std::string* dictionary) {
-    ifstream file("dictionary.txt");
-    if (!file.is_open()) {
-        cerr << "Error: Could not open dictionary file!" << std::endl;
-        return;
-    }
-
-    string word;
-    int index = 0;
-    while (file >> word && index < dictionarysize) {
-        dictionary[index++] = word; 
-    }
-    file.close();
-}
-bool isWordInDictionary(const std::string& word, std::string* dictionary, int dictionarysize) {
-    for (int i = 0; i < dictionarysize; ++i) {
-        if (dictionary[i] == word) {
+bool wordisindictionary(const string dict[],int size,const string& word){
+    for(int i = 0; i < size; ++i){
+        if(dict[i] == word){
             return true; 
         }
     }
     return false; 
 }
 
-alphabets charToAlphabet(char c){
-    if(c>='A'&&c<='Z'){
-      return static_cast<alphabets>(c - 'A'); 
-    }
-    return static_cast<alphabets>(-1); 
-}
+void checkgrid(const string dict[], int dictionarysize, int alphabetGrid[][2]) {
+    const int minWordLength=2;
+    const int maxWordLength=15;
 
+    for(int row=0;row<2;row++){
+      for(int col=0;col<15;col++){
+            if (alphabetGrid[col][row]==-1)
+                continue;
+            if (col+minWordLength<=15){
+                string wordLR = "";
+                for(int k=col;k<15&&(k-col)<maxWordLength;k++){
+                  if(alphabetGrid[k][row]==-1)
+                        break;
+                    wordLR+=('a'+alphabetGrid[k][row]);
+                    int wordLen=0;
+                    while (wordLR[wordLen]!='\0') {
+                        wordLen++;
+                    }
+                    if (wordLen>=minWordLength) {
+                        if (wordisindictionary(dict,dictionarysize,wordLR)){
+                            for(int m=col;m<col+wordLen&&m<15;m++){
+                              alphabetGrid[m][row]=-1;
+                            }
+                            cout<<"Word found and removed:"<<wordLR<<endl;
+                        }
+                    }
+                }
+            }
+            if (row+minWordLength<=2){
+                string wordTB="";
+                for(int k=row;k<2&&(k-row)<maxWordLength;k++){
+                  if(alphabetGrid[col][k]==-1)
+                      break;
+                    wordTB+=('a'+alphabetGrid[col][k]);
+                    int wordLen=0;
+                    while(wordTB[wordLen]!='\0') {
+                        wordLen++;
+                    }
+                    if(wordLen>=minWordLength){
+                        if(wordisindictionary(dict,dictionarysize, wordTB)) {
+                            for(int m=row;m<row+wordLen&&m<2;m++) {
+                                alphabetGrid[col][m]=-1;
+                            }
+                            cout << "Word found and removed: " << wordTB << endl;
+                        }
+                    }
+                }
+            }
+
+            if(row-minWordLength+1>=0){
+                string wordBT="";
+                for (int k=row;k>=0&&(row-k)<maxWordLength;k--){
+                    if(alphabetGrid[col][k]==-1)
+                      break;
+                    wordBT+=('a'+alphabetGrid[col][k]);
+                    int wordLen=0;
+                    while(wordBT[wordLen]!='\0'){
+                        wordLen++;
+                    }
+                    if(wordLen>=minWordLength){
+                        if(wordisindictionary(dict,dictionarysize,wordBT)){
+                            for(int m=row;m>=row-wordLen+1&&m>=0;m--){
+                              alphabetGrid[col][m]=-1;
+                            }
+                            cout<<"Word found and removed: "<<wordBT<<endl;
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+bool analyzewordsingrid(int grid[2][15], const string dictionary[], int dictionarySize) {
+    string foundword[100];
+    int wordindex=0;
+    int wordsfound=0;
+    for (int w=0;w<dictionarySize;w++){
+        string word=dictionary[w];
+        int wordLen=0;
+        while(word[wordLen]!='\0'){
+            wordLen++;
+        }
+        if(wordLen<3||wordLen>15){
+            continue;
+        }
+        for(int col=0;col<5;col++){
+          for(int row=0;row<15;row++){
+              for (int dcol = -1; dcol <= 1; dcol++) {
+                  for (int drow = -1; drow <= 1; drow++) {
+                      if (dcol == 0 && drow == 0) {
+                            continue;
+                        }             
+                        int end_col=col+(wordLen-1)*dcol;
+                        int end_row=row+(wordLen-1)*drow;
+                        if(end_col<0||end_col>=5||end_row<0||end_row>=15){
+                          continue; 
+                        }
+                        bool match=true; 
+                        for (int k=0;k<wordLen;k++) {
+                            int current_col =col+k*dcol;
+                            int current_row =row+k*drow;
+
+                            int grid_val = grid[current_col][current_row];
+                            char grid_char ='a'+grid_val; 
+
+                            if (grid_char != word[k]) {
+                                match = false;
+                                break; 
+                            }
+                        }
+
+                        if (match){
+                            if (wordindex < 100) {
+                                foundword[wordindex++] = word;
+                            }
+                            cout<<word<<endl;
+                            for (int m = 0; m < wordLen; ++m) {
+                                int current_col=col+m*dcol;
+                                int current_row=row+m*drow;
+                                grid[current_col][current_row]=rand()%26; 
+                            }
+                            wordsfound++;
+                            if(wordsfound==4){
+                            return true;
+                           }
+                        } 
+                    }
+                }
+            }
+        }
+    }
+    return false;
+}
 
 void RegisterTextures_Write()
 {
@@ -190,7 +235,7 @@ void RegisterTextures_Write()
 	vector<unsigned char> data;
 	ofstream ofile("image-data.bin", ios::binary | ios::out);
 
-	for (int i = 0; i < nalphabets; ++i) {
+	for (int i = 0; i < nalphabets; i++) {
 
 		ReadImage(tnames[i], data);
 		if (i == 0) {
@@ -281,6 +326,113 @@ void RegisterTextures()
 	}
 	ifile.close();
 }
+void wordsingrid(int grid[2][15], const string dictionary[], int dictionarySize) {
+    string largestWord = ""; 
+    int start_col = -1, start_row = -1; 
+    int final_dcol = 0, final_drow = 0; 
+    int wordsfound=0;
+
+    for (int w = 0; w < dictionarySize; w++) {
+        string word = dictionary[w];
+        int wordLen = 0;
+        while (word[wordLen] != '\0') {
+            ++wordLen;
+        }
+        if (wordLen < 3 || wordLen > 15) {
+            continue;
+        }
+        for (int col = 0; col < 5; col++) {
+            for (int row = 0; row < 15; row++) {
+
+                for (int d = 0; d < 8; d++) {
+                    int dcol = 0, drow = 0;
+
+                    if (d==0){
+                    dcol=1;
+                    drow=0; 
+                    }   
+                    else if(d==1){
+                    dcol=-1;
+                    drow=0; 
+                    } 
+                    else if(d==2){
+                    dcol=0;
+                    drow=1;
+                    }   
+                    else if(d==3){
+                    dcol=0;
+                    drow=-1;
+                    }  
+                    else if(d==4){
+                    dcol=1;
+                    drow=1;
+                    }   
+                    else if(d==5){
+                    dcol=-1; 
+                    drow=1;
+                    }  
+                    else if(d==6){
+                    dcol=1;
+                    drow=-1;
+                    }  
+                    else if(d==7){
+                    dcol=-1;
+                    drow=-1;
+                    } 
+                    int end_col=col+(wordLen-1)*dcol;
+                    int end_row=row+(wordLen-1)*drow;
+                    if (end_col<0||end_col>=5||end_row<0||end_row>=15){
+                        continue;
+                    }
+                    bool match=true; 
+                    for (int k=0;k<wordLen;k++){
+                        int current_col=col+k*dcol;
+                        int current_row=row+k*drow;
+                        int grid_val=grid[current_col][current_row];
+                        char grid_char='a'+grid_val; 
+                        if (grid_char!=word[k]){
+                            match=false;
+                            break;
+                        }
+                    }
+                    if (match){
+                        int largestWordLen=0;
+                        while (largestWord[largestWordLen]!='\0') {
+                            largestWordLen++;
+                        }
+
+                        if (wordLen>largestWordLen) {
+                            largestWord=word;
+                            start_col=col;
+                            start_row=row;
+                            final_dcol=dcol;
+                            final_drow=drow;
+                        }
+                        wordsfound++;
+                        if(wordsfound==4){
+                        break;
+                        }
+                    }
+                }
+            }
+        }
+    }
+    if (largestWord[0]!='\0'){ 
+        int wordLen=0;
+        while(largestWord[wordLen]!='\0'){
+            wordLen++;
+        }
+
+        for (int m=0;m<wordLen;m++){
+            int current_col=start_col+m*final_dcol;
+            int current_row=start_row+m*final_drow;
+            grid[current_col][current_row]=-1; 
+            score++;
+        }
+  cout<<largestWord<<endl; 
+    }
+}
+
 void DrawAlphabet(const alphabets &cname, int sx, int sy, int cwidth = 60,
 	int cheight = 60)
 	/*Draws a specfic cookie at given position coordinate
@@ -361,80 +513,40 @@ void DrawShooter(int sx, int sy, int cwidth = 60, int cheight = 60)
 /*
 * Main Canvas drawing function.
 * */
-void generateRandomAlphabets(char topalphabets[NUM_ROWS][NUM_COLS]) {
-    for(int i=0;i<NUM_ROWS;i++){ 
-        for(int j=0;j<NUM_COLS;j++){
-            int randomIndex=rand()%26;
-            topalphabets[i][j]='A'+randomIndex;
-        }
-    }
+    
+bool collisioncheck(int locx,int locy,int radius,int rowY,int alphabetGrid[5][15],int r) {
+	    for (int i = 0; i < 15; ++i) {
+		int alphabetXU = i*60-60; 
+		int alphabetYU = rowY;  
+		 if(alphabetGrid[r][i] == -1)
+				continue;  
+		if(locx+radius>alphabetXU&&locx-radius<alphabetXU+60&&locy+radius>alphabetYU&&locy-radius<alphabetYU+60){
+        		cout<<r<<i<<endl;
+	      		    return true;  
+		}
+	    }
+    return false;  
 }
-void initializeBubbles(){
-    for(int i=0;i<10;i++){
-      for(int j=0;j<15;j++){
-         isBubbleBurst[i][j]=false; 
-        }
-    }
+void balancer(int alphabetGrid[5][15],int bx,int by){
+	int x=(bx)/60;
+	int y=(height-by-60)/60;
+	alphabetGrid[y][x]=ball;
+	cout<<height<<' '<<y<<' '<<x<<' '<<by<<' '<<bx<<endl;
 }
-void maxlengthword_h(){
-    for(int i=0;i<10;i++){  
-        for(int j=0;j<15;j++) {
-          for(int k=14;k>=j+2;k--){
-                string newforward="";
-                string backward="";
-                for(int l=j;l<=k;l++){
-                    if(isBubbleBurst[i][l]){
-                        continue;  
-                     }
-                    newforward+=char(bubbles[i][l]+97);  
-                }
-                for(int l=k;l>=j;l--){
-                    if(isBubbleBurst[i][l]){
-                        continue;  
-                    }
-                    backward+=char(bubbles[i][l]+97);  
-                }
-      if(isWordInDictionary(newforward,dictionary,dictionarysize)||isWordInDictionary(backward,dictionary,dictionarysize)){
-        for (int l = j; l <= k; l++) {
-            isBubbleBurst[i][l] = true;
-                score++;
-              }
-            }
-          }
-      }
-    }
+void alphabetgrid() {
+  do{
+    for(int j=0;j<5;j++){
+      if(j<2)
+	for(int i=0;i<15;i++){
+	  alphabetGrid[j][i] = rand() % 26; 
+    	  }
+       else
+        for(int i=0;i<15;i++)
+      	  alphabetGrid[j][i]=-1;
+	  }
+	}while(analyzewordsingrid(alphabetGrid,dictionary,dictionarysize));
+    ball=rand()%26;
 }
-void maxlengthword_v() {
-    for(int i=0;i<15;i++){  
-        for(int j=0;j<10;j++){
-            for(int k=9;k>=j+2;k--){
-                std::string newforward = "";
-                std::string backward = "";
-                for (int l = j; l <= k; l++) {
-                    if (isBubbleBurst[l][i]) {
-                        continue;  
-                    }
-                    newforward+=char(bubbles[l][i]+97); 
-                }
-                for(int l=k;l>=j;l--){
-                    if(isBubbleBurst[l][i]){
-                      continue; 
-                    }
-                    backward+=char(bubbles[l][i]+97); 
-                }
-      if(isWordInDictionary(newforward,dictionary,dictionarysize)||isWordInDictionary(backward,dictionary,dictionarysize)){
-          for (int l=j;l<=k;l++){
-              isBubbleBurst[l][i]=true;
-                score++;
-              }
-            }
-          }
-        }
-    }
-}
-bool reachedtarget(){
-  return locy<=430; 
-}         
 void DisplayFunction() {
 	// set the background color using function glClearColor.
 	// to change the background play with the red, green and blue values below.
@@ -443,912 +555,82 @@ void DisplayFunction() {
 	glClearColor(1/*Red Component*/, 1.0/*Green Component*/,
 		1.0/*Blue Component*/, 0 /*Alpha component*/); // Red==Green==Blue==1 --> White Colour
 	glClear(GL_COLOR_BUFFER_BIT); //Update the colors
-	turn++;
-    if(turn==1){
-    generateRandomAlphabets(topalphabets);
-    }
-    for (int col=0;col<NUM_COLS;col++){
-    DrawAlphabet(charToAlphabet(topalphabets[0][col]),10+col*60,height-100, awidth, aheight);
-}
-    for(int col=0;col<NUM_COLS;col++){
-    DrawAlphabet(charToAlphabet(topalphabets[1][col]),10+col*60,height-160,awidth,aheight); 
-}    
-     if(startdisplay>0 && timee!=0){
-	//shooting alphabet
-	if(loc1y<435&&clickcount==1){
-	if (shotx!=-1&&shoty!=-1&&reachedtarget){
-        //float dx=shotx-loc1x;
-        //float dy=shoty-loc1y;
-        float distance=sqrt(dx*dx+dy*dy);
-        if(distance>1.0f){
-        float dirx=dx/distance;
-        float diry=dy/distance;
-        loc1x+=dirx*30;
-        loc1y+=diry*30;
-        if(loc1x>870){
-        loc1x=870;
-        dx=-dx;
-        }
-        if(loc1x<0){
-        loc1x=0;
-        dx=-dx;
-        }
-        if(loc1y>660){
-        loc1y=660;
-        dy=-dy; 
-        }
-        }
-	}
-	/*if (loc1y<=height-100&&loc1y<height-160){
-            int targetRow=(loc1y>height-130)?0:1; 
-            int targetCol=(loc1x-10)/60; 
-            if(targetCol>=0&&targetCol<NUM_COLS&&!isBubbleBurst[targetRow][targetCol]){
-              topalphabets[targetRow][targetCol]; 
-              maxlengthword_h(); 
-              maxlengthword_v(); 
-            }
-        }*/
-    }
-	//maxlengthword_h();  
-       // maxlengthword_v();
-	DrawAlphabet((alphabets)num[31], loc1x, loc1y, awidth, aheight);
-	
-	if(loc2y<435 && loc1y>415&&clickcount==2){
-	if (shotx!=-1&&shoty!=-1&&bubblemoving) {
-        //float dx=shotx-loc2x;
-        //float dy=shoty-loc2y;
-        float distance=sqrt(dx*dx+dy*dy);
-        if(distance>1.0f){
-        float dirx=dx/distance;
-        float diry=dy/distance;
-        
-        loc2x+=dirx*30;
-        loc2y+=diry*30;
-        if(loc2x>870){
-        loc2x=870;
-        dx=-dx;
-        }
-        if(loc2x<0){
-        loc2x=0;
-        dx=-dx;
-        }
-        if(loc2y>660){
-        loc2y=660;
-        dy=-dy;
-        }
-        }
-	}
-	if(loc2y==435){
-	bubblemoving=false;
-	}
-	/*if(loc2y<=height-100&&loc2y<height-160){
-          int targetRow=(loc2y>height-130)?0:1; 
-          int targetCol=(loc2x-10)/60; 
-            if(targetCol>=0&&targetCol<NUM_COLS&&!isBubbleBurst[targetRow][targetCol]){
-              topalphabets[targetRow][targetCol];
-              maxlengthword_h(); 
-              maxlengthword_v(); 
-            }
-        }*/
-    }
-	if(loc1y>415){
-	DrawAlphabet((alphabets)num[32], loc2x, loc2y, awidth, aheight);
-	}
-	
-	
-	if(loc3y<435 && loc2y>415&&clickcount==3){
-	if (shotx!=-1&&shoty!=-1&&bubblemoving) {
-        //float dx=shotx-loc3x;
-        //float dy=shoty-loc3y;
-        float distance=sqrt(dx*dx+dy*dy);
-        if(distance>1.0f){
-        float dirx=dx/distance;
-        float diry=dy/distance;
-        
-        loc3x+=dirx*30;
-        loc3y+=diry*30;
-        if(loc3x>870){
-        loc3x=870;
-        dx=-dx;
-        }
-        if(loc3x<0){
-        loc3x=0;
-        dx=-dx;
-        }
-        if(loc3y>660){
-        loc3y=660;
-        dy=-dy;
-        }
-        }
-	}
-	if(loc3y==435){
-	bubblemoving=false;
-	}
-	/*if(loc3y<=height-100&&loc3y<height-160){
-            int targetRow=(loc3y>height-130)?0:1; 
-            int targetCol=(loc3x-10)/60; 
-            if(targetCol>=0&&targetCol<NUM_COLS&&!isBubbleBurst[targetRow][targetCol]) {
-                topalphabets[targetRow][targetCol]; 
-                maxlengthword_h(); 
-                maxlengthword_v(); 
-            }
-        }*/
-    }
-	
-	//loc3y=loc3y+8;
-	
-	if(loc2y>415){
-	DrawAlphabet((alphabets)num[33], loc3x, loc3y, awidth, aheight);
-	}
-	
-	//forth shoot
-	if(loc4y<435 && loc3y>415&&clickcount==4){
-	if (shotx!=-1&&shoty!=-1&&bubblemoving) {
-        //float dx=shotx-loc4x;
-        //float dy=shoty-loc4y;
-        float distance=sqrt(dx*dx+dy*dy);
-        if(distance>1.0f){
-        float dirx=dx/distance;
-        float diry=dy/distance;
-        
-        loc4x+=dirx*30;
-        loc4y+=diry*30;
-        if(loc4x>870){
-        loc4x=870;
-        dx=-dx;
-        }
-        if(loc4x<0){
-        loc4x=0;
-        dx=-dx;
-        }
-        if(loc4y>660){
-        loc4y=660;
-        }
-        }
-	}
-	if(loc4y==435)
-	bubblemoving=false;
-	}
-	if(loc3y>415){
-	DrawAlphabet((alphabets)num[34],loc4x,loc4y,awidth,aheight);
-	}
-	
-	//fifth shoot
-	if(loc5y<435 && loc4y>415&&clickcount==5){
-	if(shotx!=-1&&shoty!=-1&&bubblemoving){
-    //    float dx=shotx-loc5x;
-    //    float dy=shoty-loc5y;
-        float distance=sqrt(dx*dx+dy*dy);
-        if(distance>1.0f){
-        float dirx=dx/distance;
-        float diry=dy/distance;
-        
-        loc5x+=dirx*30;
-        loc5y+=diry*30;
-        if(loc5x>870){
-        loc5x=870;
-        dx=-dx;
-        }
-        if(loc5x<0){
-        loc5x=0;
-        dx=-dx;
-        }
-        if(loc5y>660){
-        loc5y=660;
-        }
-        }
-	}
-	if(loc5y==435)
-	bubblemoving=false;
-	}
-	if(loc4y>415){
-	DrawAlphabet((alphabets)num[35], loc5x, loc5y, awidth, aheight);
-	}
-	
-	//sixth shoot
-	if(loc6y<435 && loc5y>415&&clickcount==6){
-	if (shotx!=-1&&shoty!=-1&&bubblemoving) {
-       // float dx=shotx-loc6x;
-       // float dy=shoty-loc6y;
-        float distance=sqrt(dx*dx+dy*dy);
-        if(distance>1.0f){
-        float dirx=dx/distance;
-        float diry=dy/distance;
-        
-        loc6x+=dirx*30;
-        loc6y+=diry*30;
-        if(loc6x>870){
-        loc6x=870;
-        dx=-dx;
-        }
-        if(loc6x<0){
-        loc6x=0;
-        dx=-dx;
-        }
-        if(loc6y>660){
-        loc6y=660;
-        }
-        }
-	}
-	if(loc6y==435)
-	bubblemoving=false;
-	}
-	if(loc5y>415){
-	DrawAlphabet((alphabets)num[36], loc6x, loc6y, awidth, aheight);
-	}
-	
-	//seventh shoot
-	if(loc7y<435 && loc6y>415&&clickcount==7){
-	if (shotx!=-1&&shoty!=-1&&bubblemoving) {
-        //float dx=shotx-loc7x;
-        //float dy=shoty-loc7y;
-        float distance=sqrt(dx*dx+dy*dy);
-        if(distance>1.0f){
-        float dirx=dx/distance;
-        float diry=dy/distance;
-        
-        loc7x+=dirx*30;
-        loc7y+=diry*30;
-        if(loc7x>870){
-        loc7x=870;
-        dx=-dx;
-        }
-        if(loc7x<0){
-        loc7x=0;        
-        dx=-dx;
-        }
-        if(loc7y>660){
-        loc7y=660;
-        }
-        }
-	}
-	if(loc7y==435)
-	bubblemoving=false;
-	}
-	if(loc6y>415){
-	DrawAlphabet((alphabets)num[37], loc7x, loc7y, awidth, aheight);
-	}
-	
-	//eighth shoot
-	if(loc8y<435 && loc7y>415&&clickcount==8){
-	if (shotx!=-1&&shoty!=-1&&bubblemoving) {
-       // float dx=shotx-loc8x;
-       // float dy=shoty-loc8y;
-        float distance=sqrt(dx*dx+dy*dy);
-        if(distance>1.0f){
-        float dirx=dx/distance;
-        float diry=dy/distance;
-        
-        loc8x+=dirx*30;
-        loc8y+=diry*30;
-        if(loc4x>870){
-        loc8x=870;
-        dx=-dx;
-        }
-        if(loc8x<0){
-        loc8x=0;
-        dx=-dx;
-        }
-        if(loc8y>660){
-        loc8y=660;
-        }
-        }
-	}
-	if(loc8y==435)
-	bubblemoving=false;
-	}
-	if(loc7y>415){
-	DrawAlphabet((alphabets)num[38], loc8x, loc8y, awidth, aheight);
-	}
-	
-	//ninth shoot
-	if(loc9y<435 && loc8y>415&&clickcount==9){
-	if (shotx!=-1&&shoty!=-1&&bubblemoving) {
-      //  float dx=shotx-loc9x;
-        //float dy=shoty-loc9y;
-        float distance=sqrt(dx*dx+dy*dy);
-        if(distance>1.0f){
-        float dirx=dx/distance;
-        float diry=dy/distance;
-        
-        loc9x+=dirx*30;
-        loc9y+=diry*30;
-        if(loc9x>870){
-        loc4x=870;
-        dx=-dx;
-        }
-        if(loc9x<0){
-        loc9x=0;
-        dx=-dx;
-        }
-        if(loc9y>660){
-        loc9y=660;
-        }
-        }
-	}
-	if(loc9y==435)
-	bubblemoving=false;
-	}
-	if(loc8y>415){
-	DrawAlphabet((alphabets)num[39], loc9x, loc9y, awidth, aheight);
-	}
-	
-	//tenth shoot
-	if(loc10y<435 && loc9y>415&&clickcount==10){
-	if (shotx!=-1&&shoty!=-1&&bubblemoving) {
-      //  float dx=shotx-loc10x;
-      //  float dy=shoty-loc10y;
-        float distance=sqrt(dx*dx+dy*dy);
-        if(distance>1.0f){
-        float dirx=dx/distance;
-        float diry=dy/distance;
-        
-        loc10x+=dirx*30;
-        loc10y+=diry*30;
-        if(loc10x>870){
-        loc10x=870;
-        dx=-dx;
-        }
-        if(loc10x<0){
-        loc10x=0;
-        dx=-dx;
-        }
-        if(loc10y>660){
-        loc10y=660;
-        }
-        }
-	}
-	if(loc10y==435)
-	bubblemoving=false;
-	}
-	if(loc9y>415){
-	DrawAlphabet((alphabets)num[40], loc10x, loc10y, awidth, aheight);
-	}
-	//eleventh shoot
-	if(loc11y<435 && loc10y>415&&clickcount==11){
-	if (shotx!=-1&&shoty!=-1&&bubblemoving) {
-        //float dx=shotx-loc11x;
-       // float dy=shoty-loc11y;
-        float distance=sqrt(dx*dx+dy*dy);
-        if(distance>1.0f){
-        float dirx=dx/distance;
-        float diry=dy/distance;
-        
-        loc11x+=dirx*30;
-        loc11y+=diry*30;
-        if(loc11x>870){
-        loc11x=870;
-        dx=-dx;
-        }
-        if(loc11x<0){
-        loc11x=0;
-        dx=-dx;
-        }
-        if(loc11y>660){
-        loc11y=660;
-        }
-        }
-	}
-	if(loc11y==435)
-	bubblemoving=false;
-	}
-	if(loc10y>415){
-	DrawAlphabet((alphabets)num[41], loc11x, loc11y, awidth, aheight);
-	}
-	//twelveth shoot
-	if(loc12y<435 && loc11y>415&&clickcount==12){
-	if (shotx!=-1&&shoty!=-1&&bubblemoving) {
-     //   float dx=shotx-loc12x;
-       // float dy=shoty-loc12y;
-        float distance=sqrt(dx*dx+dy*dy);
-        if(distance>1.0f){
-        float dirx=dx/distance;
-        float diry=dy/distance;
-        
-        loc12x+=dirx*30;
-        loc12y+=diry*30;
-        if(loc12x>870){
-        loc12x=870;
-        dx=-dx;
-        }
-        if(loc12x<0){
-        loc12x=0;
-        dx=-dx;
-        }
-        if(loc12y>660){
-        loc12y=660;
-        }
-        }
-	}
-	if(loc12y==435)
-	bubblemoving=false;
-	}
-	if(loc11y>415){
-	DrawAlphabet((alphabets)num[42], loc12x, loc12y, awidth, aheight);
-	}
-	//thirteenth shoot
-	if(loc13y<435 && loc12y>415&&clickcount==13){
-	if (shotx!=-1&&shoty!=-1&&bubblemoving) {
-  //      float dx=shotx-loc13x;
-    //    float dy=shoty-loc13y;
-        float distance=sqrt(dx*dx+dy*dy);
-        if(distance>1.0f){
-        float dirx=dx/distance;
-        float diry=dy/distance;
-        
-        loc13x+=dirx*30;
-        loc13y+=diry*30;
-        if(loc13x>870){
-        loc13x=870;
-        dx=-dx;
-        }
-        if(loc13x<0){
-        loc13x=0;
-        dx=-dx;
-        }
-        if(loc13y>660){
-        loc13y=660;
-        }
-        }
-	}
-	if(loc13y==435)
-	bubblemoving=false;
-	}
-	if(loc12y>415){
-	DrawAlphabet((alphabets)num[43], loc13x, loc13y, awidth, aheight);
-	}
-	if(loc14y<435 && loc12y>415&&clickcount==14){
-	if (shotx!=-1&&shoty!=-1&&bubblemoving) {
-   //     float dx=shotx-loc14x;
-     //   float dy=shoty-loc14y;
-        float distance=sqrt(dx*dx+dy*dy);
-        if(distance>1.0f){
-        float dirx=dx/distance;
-        float diry=dy/distance;
-        
-        loc14x+=dirx*30;
-        loc14y+=diry*30;
-        if(loc14x>870){
-        loc14x=870;
-        dx=-dx;
-        }
-        if(loc14x<0){
-        loc14x=0;
-        dx=-dx;
-        }
-        if(loc14y>660){
-        loc14y=660;
-        }
-        }
-	}
-	if(loc14y==435)
-	bubblemoving=false;
-	}
-	if(loc13y>415){
-	DrawAlphabet((alphabets)num[44], loc14x, loc14y, awidth, aheight);
-	}
-	if(loc15y<435 && loc14y>415&&clickcount==15){
-	if (shotx!=-1&&shoty!=-1&&bubblemoving) {
-      //  float dx=shotx-loc15x;
-      //  float dy=shoty-loc15y;
-        float distance=sqrt(dx*dx+dy*dy);
-        if(distance>1.0f){
-        float dirx=dx/distance;
-        float diry=dy/distance;
-        
-        loc15x+=dirx*30;
-        loc15y+=diry*30;
-        if(loc15x>870){
-        loc15x=870;
-        dx=-dx;
-        }
-        if(loc15x<0){
-        loc15x=0;
-        dx=-dx;
-        }
-        if(loc15y>660){
-        loc15y=660;
-        }
-        }
-	}
-	if(loc15y==435)
-	bubblemoving=false;
-	}
-	if(loc14y>415){
-	DrawAlphabet((alphabets)num[45], loc15x, loc15y, awidth, aheight);
-	}
+	if (gameover) {
+        DrawAlphabet((alphabets)6, 250, height-300, awidth, aheight);
 
-        if(loc16y<390 && loc15y>380&&clickcount==16){
-	if (shotx!=-1&&shoty!=-1&&bubblemoving) {
-       // float dx=shotx-loc16x;
-       // float dy=shoty-loc16y;
-        float distance=sqrt(dx*dx+dy*dy);
-        if(distance>1.0f){
-        float dirx=dx/distance;
-        float diry=dy/distance;
-        
-        loc16x+=dirx*30;
-        loc16y+=diry*30;
-        if(loc16x>870){
-        loc16x=870;
-        dx=-dx;
-        }
-        if(loc16x<0){
-        loc16x=0;
-        dx=-dx;
-        }
-        if(loc16y>660){
-        loc16y=660;
-        }
-        }
-	}
-	if(loc16y==435)
-	bubblemoving=false;
-	}
-	if(loc15y>380){
-	DrawAlphabet((alphabets)num[46], loc16x, loc16y, awidth, aheight);
-	}
-	if(loc17y<390 && loc16y>380&&clickcount==17){
-	if (shotx!=-1&&shoty!=-1&&bubblemoving) {
-       // float dx=shotx-loc17x;
-       // float dy=shoty-loc17y;
-        float distance=sqrt(dx*dx+dy*dy);
-        if(distance>1.0f){
-        float dirx=dx/distance;
-        float diry=dy/distance;
-        
-        loc17x+=dirx*30;
-        loc17y+=diry*30;
-        if(loc17x>870){
-        loc17x=870;
-        dx=-dx;
-        }
-        if(loc17x<0){
-        loc17x=0;
-        dx=-dx;
-        }
-        if(loc17y>660){
-        loc17y=660;
-        }
-        }
-	}
-	if(loc17y==435)
-	bubblemoving=false;
-	}
-	if(loc16y>380){
-	DrawAlphabet((alphabets)num[47], loc17x, loc17y, awidth, aheight);
-	}
-	if(loc18y<390 && loc17y>380&&clickcount==18){
-	if (shotx!=-1&&shoty!=-1&&bubblemoving) {
-      //  float dx=shotx-loc18x;
-        //float dy=shoty-loc18y;
-        float distance=sqrt(dx*dx+dy*dy);
-        if(distance>1.0f){
-        float dirx=dx/distance;
-        float diry=dy/distance;
-        
-        loc18x+=dirx*30;
-        loc18y+=diry*30;
-        if(loc18x>870){
-        loc18x=870;
-        dx=-dx;
-        }
-        if(loc18x<0){
-        loc18x=0;
-        dx=-dx;
-        }
-        if(loc18y>660){
-        loc18y=660;
-        }
-        }
-	}
-	if(loc18y==435)
-	bubblemoving=false;
-	}
-	if(loc17y>380){
-	DrawAlphabet((alphabets)num[48], loc18x, loc18y, awidth, aheight);
-	}
-	if(loc19y<390 && loc18y>380&&clickcount==19){
-	if (shotx!=-1&&shoty!=-1&&bubblemoving) {
-    //    float dx=shotx-loc19x;
-      //  float dy=shoty-loc19y;
-        float distance=sqrt(dx*dx+dy*dy);
-        if(distance>1.0f){
-        float dirx=dx/distance;
-        float diry=dy/distance;
-        
-        loc19x+=dirx*30;
-        loc19y+=diry*30;
-        if(loc19x>870){
-        loc19x=870;
-        dx=-dx;
-        }
-        if(loc19x<0){
-        loc19x=0;
-        dx=-dx;
-        }
-        if(loc19y>660){
-        loc19y=660;
-        }
-        }
-	}
-	if(loc19y==435)
-	bubblemoving=false;
-	}
-	if(loc18y>380){
-	DrawAlphabet((alphabets)num[49], loc19x, loc19y, awidth, aheight);
-	}
-	if(loc20y<390 && loc19y>380&&clickcount==20){
-	if (shotx!=-1&&shoty!=-1&&bubblemoving) {
-   //     float dx=shotx-loc20x;
-    //    float dy=shoty-loc20y;
-        float distance=sqrt(dx*dx+dy*dy);
-        if(distance>1.0f){
-        float dirx=dx/distance;
-        float diry=dy/distance;
-        
-        loc20y+=dirx*30;
-        loc20y+=diry*30;
-        if(loc20x>870){
-        loc20x=870;
-        dx=-dx;
-        }
-        if(loc20x<0){
-        loc20x=0;
-        dx=-dx;
-        }
-        if(loc20y>660){
-        loc20y=660;
-        }
-        }
-	}
-	if(loc20y==435)
-	bubblemoving=false;
-	}
-	if(loc19y>380){
-	DrawAlphabet((alphabets)num[50], loc20x, loc20y, awidth, aheight);
-	}
-	if(loc21y<390 && loc20y>380&&clickcount==21){
-	if (shotx!=-1&&shoty!=-1&&bubblemoving) {
-    //    float dx=shotx-loc21x;
-    //    float dy=shoty-loc21y;
-        float distance=sqrt(dx*dx+dy*dy);
-        if(distance>1.0f){
-        float dirx=dx/distance;
-        float diry=dy/distance;
-        
-        loc21x+=dirx*30;
-        loc21y+=diry*30;
-        if(loc21x>870){
-        loc21x=870;
-        dx=-dx;
-        }
-        if(loc21x<0){
-        loc21x=0;
-        dx=-dx;
-        }
-        if(loc21y>660){
-        loc21y=660;
-        }
-        }
-	}
-	if(loc21y==435)
-	bubblemoving=false;
-	}
-	if(loc20y>380){
-	DrawAlphabet((alphabets)num[28], loc21x, loc21y, awidth, aheight);
-	}
-	if(loc22y<390 && loc21y>380&&clickcount==22){
-	if (shotx!=-1&&shoty!=-1&&bubblemoving) {
-   //     float dx=shotx-loc22x;
-     //   float dy=shoty-loc22y;
-        float distance=sqrt(dx*dx+dy*dy);
-        if(distance>1.0f){
-        float dirx=dx/distance;
-        float diry=dy/distance;
-        
-        loc22x+=dirx*30;
-        loc22y+=diry*30;
-        if(loc22x>870){
-        loc22x=870;
-        dx=-dx;
-        }
-        if(loc22x<0){
-        loc22x=0;
-        dx=-dx;
-        }
-        if(loc22y>660){
-        loc22y=660;
-        }
-        }
-	}
-	if(loc22y==435)
-	bubblemoving=false;
-	}
-	
-	if(loc21y>380){
-	DrawAlphabet((alphabets)num[30], loc22x, loc22y, awidth, aheight);
-	}
-        if(loc23y<390 && loc22y>380&&clickcount==23){
-	if (shotx!=-1&&shoty!=-1&&bubblemoving) {
-     //   float dx=shotx-loc23x;
-       // float dy=shoty-loc23y;
-        float distance=sqrt(dx*dx+dy*dy);
-        if(distance>1.0f){
-        float dirx=dx/distance;
-        float diry=dy/distance;
-        
-        loc23x+=dirx*30;
-        loc23y+=diry*30;
-        if(loc23x>870){
-        loc23x=870;
-        dx=-dx;
-        }
-        if(loc23x<0){
-        loc23x=0;
-        dx=-dx;
-        }
-        if(loc23y>660){
-        loc23y=660;
-        }
-        }
-	}
-	if(loc23y==435)
-	bubblemoving=false;
-	}	
-	if(loc22y>380){
-	DrawAlphabet((alphabets)num[26], loc23x, loc23y, awidth, aheight);
-	}
-	if(loc24y<390 && loc23y>380&&clickcount==24){
-	if (shotx!=-1&&shoty!=-1&&bubblemoving) {
-//        float dx=shotx-loc24x;
-  //      float dy=shoty-loc24y;
-        float distance=sqrt(dx*dx+dy*dy);
-        if(distance>1.0f){
-        float dirx=dx/distance;
-        float diry=dy/distance;
-        
-        loc24x+=dirx*30;
-        loc24y+=diry*30;
-        if(loc24x>870){
-        loc24x=870;
-        dx=-dx;
-        }
-        if(loc24x<0){
-        loc24x=0;
-        dx=-dx;
-        }
-        if(loc24y>660){
-        loc24y=660;
-        }
-        }
-	}
-	if(loc24y==435)
-	bubblemoving=false;
-	}
-	if(loc23y>380){
-	DrawAlphabet((alphabets)num[25], loc24x, loc24y, awidth, aheight);
-	}
-	if(loc25y<390 && loc24y>380&&clickcount==25){
-	if (shotx!=-1&&shoty!=-1&&bubblemoving) {
-//        float dx=shotx-loc24x;
-  //      float dy=shoty-loc24y;
-        float distance=sqrt(dx*dx+dy*dy);
-        if(distance>1.0f){
-        float dirx=dx/distance;
-        float diry=dy/distance;
-        
-        loc25x+=dirx*30;
-        loc25y+=diry*30;
-        if(loc25x>870){
-        loc25x=870;
-        dx=-dx;
-        }
-        if(loc25x<0){
-        loc25x=0;
-        dx=-dx;
-        }
-        if(loc25y>660){
-        loc25y=660;
-        }
-        }
-	}
-	if(loc25y==435)
-	bubblemoving=false;
-	}
-	if(loc24y>380){
-	DrawAlphabet((alphabets)num[27], loc25x, loc25y, awidth, aheight);
-	}
-	if(loc26y<390 && loc25y>380&&clickcount==26){
-	if (shotx!=-1&&shoty!=-1&&bubblemoving) {
-//        float dx=shotx-loc24x;
-  //      float dy=shoty-loc24y;
-        float distance=sqrt(dx*dx+dy*dy);
-        if(distance>1.0f){
-        float dirx=dx/distance;
-        float diry=dy/distance;
-        
-        loc26x+=dirx*30;
-        loc26y+=diry*30;
-        if(loc26x>870){
-        loc26x=870;
-        dx=-dx;
-        }
-        if(loc26x<0){
-        loc26x=0;
-        dx=-dx;
-        }
-        if(loc26y>660){
-        loc26y=660;
-        }
-        }
-	}
-	if(loc26y==435)
-	bubblemoving=false;
-	}
-	if(loc25y>380){
-	DrawAlphabet((alphabets)num[29], loc26x, loc26y, awidth, aheight);
-	}
-	if(loc27y<390 && loc26y>380&&clickcount==27){
-	if (shotx!=-1&&shoty!=-1&&bubblemoving) {
-//        float dx=shotx-loc24x;
-  //      float dy=shoty-loc24y;
-        float distance=sqrt(dx*dx+dy*dy);
-        if(distance>1.0f){
-        float dirx=dx/distance;
-        float diry=dy/distance;
-        
-        loc27x+=dirx*30;
-        loc27y+=diry*30;
-        if(loc27x>870){
-        loc27x=870;
-        dx=-dx;
-        }
-        if(loc27x<0){
-        loc27x=0;
-        dx=-dx;
-        }
-        if(loc27y>660){
-        loc27y=660;
-        }
-        }
-	}
-	if(loc27y==435)
-	bubblemoving=false;
-	}
-	if(loc26y>380){
-	DrawAlphabet((alphabets)num[30], loc27x, loc27y, awidth, aheight);
-	}
-    
-	DrawString(40, height - 20, width, height + 5, "Score " + Num2Str(score), colors[BLUE_VIOLET]);
-	DrawString(width / 2 - 30, height - 25, width, height,
-		"Time Left:" + Num2Str(displaytime) + " secs", colors[RED]);
-	DrawString(80, height - 20, 500, height + 5, "Nauman Rafay\t24i-2558 ", colors[BLUE_VIOLET]);
-		
-	//end of game
-	}
-	if(timee==0 && startdisplay>=1){
-	DrawAlphabet((alphabets)6, 250, height-300, awidth, aheight);
 	DrawAlphabet((alphabets)0, 310, height -300, awidth, aheight);
 	DrawAlphabet((alphabets)12, 370, height -300, awidth, aheight);
+
 	DrawAlphabet((alphabets)4, 430, height -300, awidth, aheight);
 	DrawAlphabet((alphabets)14, 490, height-300, awidth, aheight);
+
 	DrawAlphabet((alphabets)21, 550, height -300, awidth, aheight);
 	DrawAlphabet((alphabets)4, 610, height -300, awidth, aheight);
+
 	DrawAlphabet((alphabets)17, 670, height -300, awidth, aheight);
+
 	DrawString(425, 310, width, height + 5, "Final Score: " + Num2Str(score), colors[BLUE_VIOLET]);
 	DrawString(235, 50, width, height + 5, "-" , colors[WHITE]);
+    }else{
+		
+		locx+=speedx*30;
+		locy+=speedy*30;
+		if(locx<bradius-50){
+	      	locx = bradius;  
+	      	speedx = -speedx; 
+		}
+		if(locx>width-bradius){
+		locx=width-bradius; 
+	        speedx = -speedx;  
+		}
+		if(locy<bradius){
+	        locy=bradius; 
+		speedy=-speedy;  
+		}
+		if(locy>height-bradius){
+		  locy=height-bradius;  
+	      	  speedy=-speedy;  
+		}
+		for(int i=0;i<5;i++){
+		  int value=i*60+140;
+		  if (collisioncheck(locx,locy,bradius,height-value,alphabetGrid,i)) {
+	    		balancer(alphabetGrid,locx,locy);
+	      		wordsingrid(alphabetGrid,dictionary,dictionarysize);
+	      		locx = width / 2;  
+	      		locy = 0;
+	      		speedx = 0;  
+	      		speedy = 0;
+	      		ballLaunched = false;  
+	      		ball = arr[globally%26];  
+	      		globally++;
+			}
+		}	
+		int deviation=120;
+		for(int j=0;j<5;j++){
+			int x_s = 10;
+			for (int i = 0; i < 15; i++) {
+			int curr_height=height-deviation;
+			DrawAlphabet((alphabets)alphabetGrid[j][i], x_s, height - deviation, awidth, aheight);  
+			x_s = x_s + 60;
+			}
+			deviation+=60;
+		}
+		
+		DrawAlphabet((alphabets)ball, locx, locy, awidth, aheight);			
+		DrawString(40, height - 20, width, height + 5, "Score " + Num2Str(score), colors[BLUE_VIOLET]);
+	DrawString(width / 2 - 30, height - 25, width, height,"Time Left:" + Num2Str(displaytime) + " secs", colors[RED]);
+	DrawString(80, height - 20, 500, height + 5, "Nauman Rafay\t24i-2558 ", colors[BLUE_VIOLET]);
+	DrawShooter((width / 2) - 35, 0, bwidth, bheight);
 	}
-//	if(timee>0 && startdisplay>=1){
-//	timee--;
-//	}
-
+	glutSwapBuffers();
+}	
 	// #----------------- Write your code till here ----------------------------#
 	//DO NOT MODIFY THESE LINES
-	DrawShooter((width / 2) - 35, 0, bwidth, bheight);
-	glutSwapBuffers();
+	//DrawShooter((width / 2) - 35, 0, bwidth, bheight);
+//	}
+//	glutSwapBuffers();
 	//DO NOT MODIFY THESE LINES..
-}	
+//}	
 	
 
 /* Function sets canvas size (drawing area) in pixels...
@@ -1373,193 +655,9 @@ void SetCanvasSize(int width, int height) {
 
 void NonPrintableKeys(int key, int x, int y) {
 	if (key==GLUT_KEY_LEFT) {
-          if(loc1y<435&&loc1x>0){
-		loc1x=loc1x-15;
-		}
-		if(loc1y>400 &&(loc2y<435&&loc2x>0)){
-		loc2x=loc2x-15;
-		}
-		//third shoot
-		if(loc2y>400 &&(loc3y<435&&loc3x>0)){
-		loc3x=loc3x-15;
-		}
-		//forth shoot
-		if(loc3y>400 &&(loc4y<435&&loc4x>0)){
-		loc4x=loc4x-15;
-		}
-		//fifth shoot
-		if(loc4y>400 &&(loc5y<435&&loc5x>0)){
-		loc5x=loc5x-15;
-		}
-		//sixth shoot
-		if(loc5y>400&&(loc6y<435&&loc6x>0)){
-		loc6x=loc6x-15;
-		}
-		//seventh shoot
-		if(loc6y>400&&(loc7y<435&&loc7x>0)){
-		loc7x=loc7x-15;
-		}
-		//eighth shoot
-		if(loc7y>400&&(loc8y<435&&loc8x>0)){
-		loc8x=loc8x-15;
-		}
-		//ninth shoot
-		if(loc8y>400&&(loc9y<435&&loc9x>0)){
-		loc9x=loc9x-15;
-		}
-		//tenth shoot
-		if(loc9y>400&&(loc10y<435&&loc10x>0)){
-		loc10x=loc10x-15;
-		}
-		//eleventh shoot
-		if(loc10y>400&&(loc11y<435&&loc11x>0)){
-		loc11x=loc11x-15;
-		}
-		//twelveth shoot
-		if(loc11y>400&&(loc12y<435&&loc12x>0)){
-		loc12x=loc12x-15;
-		}
-		//thirteenth shoot
-		if(loc12y>400&&(loc13y<435&&loc13x>0)){
-		loc13x=loc13x-15;
-		}
-		if(loc13y>400&&(loc14y<435&&loc14x>0)){
-		loc14x=loc14x-15;
-		}
-		if(loc14y>400&&(loc15y<435&&loc15x>0)){
-		loc15x=loc15x-15;
-		}
-		if(loc15y>380&&(loc16y<380&&loc16x>0)){
-		loc16x=loc16x-15;
-		}
-		if(loc16y>380&&(loc17y<380&&loc17x>0)){
-		loc17x=loc17x-15;
-		}
-		if(loc17y>380&&(loc18y<380&&loc18x>0)){
-		loc18x=loc18x-15;
-		}
-		if(loc18y>380&&(loc19y<380&&loc19x>0)){
-		loc19x=loc19x-15;
-		}
-		if(loc19y>380&&(loc20y<380&&loc20x>0)){
-		loc20x=loc20x-15;
-		}
-		if(loc20y>380&&(loc21y<380&&loc21x>0)){
-		loc21x=loc21x-15;
-		}
-		if(loc21y>380&&(loc22y<380&&loc22x>0)){
-		loc22x=loc22x-15;
-		}
-		if(loc22y>380&&(loc23y<380&&loc23x>0)){
-		loc23x=loc23x-15;
-		}
-		if(loc23y>380&&(loc24y<380&&loc24x>0)){
-		loc24x=loc24x-15;
-		}
-		if(loc24y>380&&(loc25y<380&&loc25x>0)){
-		loc25x=loc25x-15;
-		}
-		if(loc25y>380&&(loc26y<380&&loc26x>0)){
-		loc26x=loc26x-15;
-		}
-		if(loc26y>380&&(loc27y<380&&loc27x>0)){
-		loc27x=loc27x-15;
-		}
 	}
 	else if (key == GLUT_KEY_RIGHT /*GLUT_KEY_RIGHT is constant and contains ASCII for right arrow key*/) {
         
-               if(loc1y<435&&loc1x<870){
-		loc1x=loc1x+15;
-		}
-		//second shoot
-		if(loc1y>400&&(loc2y<435&&loc2x<870)){
-		loc2x=loc2x+15;
-		}
-		//third shoot
-		if(loc2y>400&&(loc3y<435&&loc3x<870)){
-		loc3x=loc3x+15;
-		}
-		//forth shoot
-		if(loc3y>400&&(loc4y<435&&loc4x<870)){
-		loc4x=loc4x+15;
-		}
-		//fifth shoot
-		if(loc4y>400&&(loc5y<435&&loc5x<870)){
-		loc5x=loc5x+15;
-		}
-		//sixth shoot
-		if(loc5y>400&&(loc6y<435&&loc6x<870)){
-		loc6x=loc6x+15;
-		}
-		//seventh shoot
-		if(loc6y>400&&(loc7y<435&&loc7x<870)){
-		loc7x=loc7x+15;
-		}
-		//eighth shoot
-		if(loc7y>400&&(loc8y<435&&loc8x<870)){
-		loc8x=loc8x+15;
-		}
-		//ninth shoot
-		if(loc8y>400&&(loc9y<435&&loc9x<870)){
-		loc9x=loc9x+15;
-		}
-		//tenth shoot
-		if(loc9y>400&&(loc10y<435&&loc10x<870)){
-		loc10x=loc10x+15;
-		}
-		//eleventh shoot
-		if(loc10y>400&&(loc11y<435&&loc11x<870)){
-		loc11x=loc11x+15;
-		}
-		//twelveth shoot
-		if(loc11y>400&&(loc12y<435&&loc12x<870)){
-		loc12x=loc12x+15;
-		}
-		if(loc12y>400&&(loc13y<435&&loc13x<870)){
-		loc13x=loc13x+15;
-		}
-		if(loc13y>400&&(loc14y<435&&loc14x<870)){
-		loc14x=loc14x+15;
-		}
-		if(loc14y>400&&(loc15y<435&&loc15x<870)){
-		loc15x=loc15x+15;
-		}
-		if(loc15y>380&&(loc16y<380&&loc16x<870)){
-		loc16x=loc16x+15;
-		}
-		if(loc16y>380&&(loc17y<380&&loc17x<870)){
-		loc17x=loc17x+15;
-		}
-		if(loc17y>380&&(loc18y<380&&loc18x<870)){
-		loc18x=loc18x+15;
-		}
-		if(loc18y>380&&(loc19y<380&&loc19x<870)){
-		loc19x=loc19x+15;
-		}
-		if(loc19y>380&&(loc20y<380&&loc20x<870)){
-		loc20x=loc20x+15;
-		}
-		if(loc20y>380&&(loc21y<380&&loc21x<870)){
-		loc21x=loc21x+15;
-		}
-		if(loc21y>380&&(loc22y<380&&loc22x<870)){
-		loc22x=loc22x+15;
-		}
-		if(loc22y>380&&(loc23y<380&&loc23x<870)){
-		loc23x=loc23x+15;
-		}
-		if(loc23y>380&&(loc24y<380&&loc24x<870)){
-		loc24x=loc24x+15;
-		}
-		if(loc24y>380&&(loc25y<380&&loc25x<870)){
-		loc25x=loc25x+15;
-		}
-		if(loc25y>380&&(loc26y<380&&loc26x<870)){
-		loc26x=loc26x+15;
-		}
-		if(loc26y>380&&(loc27y<380&&loc27x<870)){
-		loc27x=loc27x+15;
-		}
 	}
 	else if (key == GLUT_KEY_UP/*GLUT_KEY_UP is constant and contains ASCII for up arrow key*/) {
 	}
@@ -1600,18 +698,21 @@ void MouseClicked(int button, int state, int x, int y) {
 	{     
 		if (state == GLUT_UP)
 		{
-		
-		  clickcount++;
-                  startdisplay++;
-                  shotx=x-435; 
-                  shoty=400+y;
-                  bubblemoving=true;
-                  dx=shotx-locx;
-                  dy=shoty-locy;
-              //    Distance=sqrt(dx*dx+dy*dy);
-		
-		}
+		  if (ballLaunched)
+		    return;
+
+        float shotx=(float)x/width*2-1;
+        float shoty=-((float)y/height*2-1);
+        float dx=shotx-(float)locx/width*2+1;
+        float dy=shoty-(float)locy/height*2+1;
+        float length=sqrt(dx*dx+dy*dy);
+        dx/=length;
+        dy/=length;
+        speedx=dx;
+        speedy=dy;
+	ballLaunched=true; 
 	}
+    }
 	
 	else if (button == GLUT_RIGHT_BUTTON) // dealing with right button
 	{
@@ -1647,6 +748,9 @@ void Timer(int m) {
     displaytime--;
     }
   }
+  if(timee==0){
+  gameover=true;
+  }
 	glutPostRedisplay();
 	glutTimerFunc(1000.0/FPS, Timer, 0);
  }
@@ -1656,12 +760,12 @@ void Timer(int m) {
 * */
 int main(int argc, char*argv[]) {
 	InitRandomizer(); 
-        InitializeAudio();
+        initializeaudio();
         
         Mix_Music* bgMusic=Mix_LoadMUS("background.mp3");
         if(!bgMusic){
         cerr<<"Failed to load background music "<<Mix_GetError()<<endl;
-        CleanupAudio();
+        cleanupaudio();
         exit(-1);
       }
 
@@ -1675,9 +779,7 @@ int main(int argc, char*argv[]) {
 		cout<< " word "<< i << " =" << dictionary[i] <<endl;
 
 	//Write your code here for filling the canvas with different Alphabets. You can use the Getalphabet function for getting the random alphabets
-        for(int i=0;i<NUM_COUNT;i++){
-        num[i]=rand()%26; 
-        }
+        alphabetgrid();
 
         
 	glutInit(&argc, argv); // initialize the graphics library...
@@ -1704,7 +806,7 @@ int main(int argc, char*argv[]) {
 
 	glutMainLoop();
         Mix_FreeMusic(bgMusic);
-        CleanupAudio();
+        cleanupaudio();
 
   
 	return 1;
