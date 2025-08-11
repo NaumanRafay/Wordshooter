@@ -60,7 +60,11 @@ int timee=1500;
 int displaytime=150;
 float dx=0;
 float dy=0;
+<<<<<<< HEAD
 int alphabetGrid[10][15];
+=======
+int alphabetGrid[5][15];
+>>>>>>> 77d21ec46dc8b4978daaf8bfad93e1dba4879614
 int ball=0;
 float speedx=0;  
 float speedy=0;
@@ -180,6 +184,7 @@ bool analyzewordsingrid(int grid[2][15], const string dictionary[], int dictiona
         if(wordLen<3||wordLen>15){
             continue;
         }
+<<<<<<< HEAD
         for(int row=0;row<10;row++){
           for(int col=0;col<15;col++){
               for (int drow = -1; drow <= 1; drow++) {
@@ -190,14 +195,33 @@ bool analyzewordsingrid(int grid[2][15], const string dictionary[], int dictiona
                         int end_row=row+(wordLen-1)*drow;
                         int end_col=col+(wordLen-1)*dcol;
                         if(end_row<0||end_row>=10||end_col<0||end_col>=15){
+=======
+        for(int col=0;col<5;col++){
+          for(int row=0;row<15;row++){
+              for (int dcol = -1; dcol <= 1; dcol++) {
+                  for (int drow = -1; drow <= 1; drow++) {
+                      if (dcol == 0 && drow == 0) {
+                            continue;
+                        }             
+                        int end_col=col+(wordLen-1)*dcol;
+                        int end_row=row+(wordLen-1)*drow;
+                        if(end_col<0||end_col>=5||end_row<0||end_row>=15){
+>>>>>>> 77d21ec46dc8b4978daaf8bfad93e1dba4879614
                           continue; 
                         }
                         bool match=true; 
                         for (int k=0;k<wordLen;k++) {
+<<<<<<< HEAD
                             int current_row =row+k*drow;
                             int current_col =col+k*dcol;
 
                             int grid_val = grid[current_row][current_col];
+=======
+                            int current_col =col+k*dcol;
+                            int current_row =row+k*drow;
+
+                            int grid_val = grid[current_col][current_row];
+>>>>>>> 77d21ec46dc8b4978daaf8bfad93e1dba4879614
                             char grid_char ='a'+grid_val; 
 
                             if (grid_char != word[k]) {
@@ -212,9 +236,15 @@ bool analyzewordsingrid(int grid[2][15], const string dictionary[], int dictiona
                             }
                             cout<<word<<endl;
                             for (int m = 0; m < wordLen; ++m) {
+<<<<<<< HEAD
                                 int current_row=row+m*drow;
                                 int current_col=col+m*dcol;
                                 grid[current_row][current_col]=rand()%26; 
+=======
+                                int current_col=col+m*dcol;
+                                int current_row=row+m*drow;
+                                grid[current_col][current_row]=rand()%26; 
+>>>>>>> 77d21ec46dc8b4978daaf8bfad93e1dba4879614
                             }
                             wordsfound++;
                             if(wordsfound==4){
@@ -341,8 +371,13 @@ void wordsingrid(int grid[2][15], const string dictionary[], int dictionarySize)
         if (wordLen < 3 || wordLen > 15) {
             continue;
         }
+<<<<<<< HEAD
         for (int row = 0; row < 10; row++) {
             for (int col = 0; col < 15; col++) {
+=======
+        for (int col = 0; col < 5; col++) {
+            for (int row = 0; row < 15; row++) {
+>>>>>>> 77d21ec46dc8b4978daaf8bfad93e1dba4879614
 
                 for (int d = 0; d < 8; d++) {
                     int dcol = 0, drow = 0;
@@ -381,7 +416,11 @@ void wordsingrid(int grid[2][15], const string dictionary[], int dictionarySize)
                     } 
                     int end_col=col+(wordLen-1)*dcol;
                     int end_row=row+(wordLen-1)*drow;
+<<<<<<< HEAD
                     if (end_col<0||end_col>=10||end_row<0||end_row>=15){
+=======
+                    if (end_col<0||end_col>=5||end_row<0||end_row>=15){
+>>>>>>> 77d21ec46dc8b4978daaf8bfad93e1dba4879614
                         continue;
                     }
                     bool match=true; 
@@ -514,6 +553,7 @@ void DrawShooter(int sx, int sy, int cwidth = 60, int cheight = 60)
 * Main Canvas drawing function.
 * */
     
+<<<<<<< HEAD
 bool collisioncheck(int locx,int locy,int radius,int rowY,int alphabetGrid[10][15],int r){
 	    for (int i = 0; i < 15; ++i){
 		int alphabetXU = i*60; 
@@ -522,12 +562,26 @@ bool collisioncheck(int locx,int locy,int radius,int rowY,int alphabetGrid[10][1
 				continue;  
 		 if(locx+radius>alphabetXU&&locx-radius<alphabetXU+60&&locy+radius>alphabetYU&&locy-radius<alphabetYU+60){
         		//cout<<r<<i<<endl;
+=======
+bool collisioncheck(int locx,int locy,int radius,int rowY,int alphabetGrid[5][15],int r) {
+	    for (int i = 0; i < 15; ++i) {
+		int alphabetXU = i*60-60; 
+		int alphabetYU = rowY;  
+		 if(alphabetGrid[r][i] == -1)
+				continue;  
+		if(locx+radius>alphabetXU&&locx-radius<alphabetXU+60&&locy+radius>alphabetYU&&locy-radius<alphabetYU+60){
+        		cout<<r<<i<<endl;
+>>>>>>> 77d21ec46dc8b4978daaf8bfad93e1dba4879614
 	      		    return true;  
 		}
 	    }
     return false;  
 }
+<<<<<<< HEAD
 void balancer(int alphabetGrid[10][15],int bx,int by){
+=======
+void balancer(int alphabetGrid[5][15],int bx,int by){
+>>>>>>> 77d21ec46dc8b4978daaf8bfad93e1dba4879614
 	int x=(bx)/60;
 	int y=(height-by-60)/60;
 	alphabetGrid[y][x]=ball;
@@ -535,7 +589,11 @@ void balancer(int alphabetGrid[10][15],int bx,int by){
 }
 void alphabetgrid() {
   do{
+<<<<<<< HEAD
     for(int j=0;j<10;j++){
+=======
+    for(int j=0;j<5;j++){
+>>>>>>> 77d21ec46dc8b4978daaf8bfad93e1dba4879614
       if(j<2)
 	for(int i=0;i<15;i++){
 	  alphabetGrid[j][i] = rand() % 26; 
@@ -552,10 +610,16 @@ void DisplayFunction() {
 	// to change the background play with the red, green and blue values below.
 	// Note that r, g and b values must be in the range [0,1] where 0 means dim red and 1 means pure red and so on.
 	//#if 0
+<<<<<<< HEAD
 	glClearColor(0/*Red Component*/, 0/*Green Component*/,
 		0/*Blue Component*/, 1 /*Alpha component*/); // Red==Green==Blue==1 --> White Colour
 	glClear(GL_COLOR_BUFFER_BIT); //Update the colors
 
+=======
+	glClearColor(1/*Red Component*/, 1.0/*Green Component*/,
+		1.0/*Blue Component*/, 0 /*Alpha component*/); // Red==Green==Blue==1 --> White Colour
+	glClear(GL_COLOR_BUFFER_BIT); //Update the colors
+>>>>>>> 77d21ec46dc8b4978daaf8bfad93e1dba4879614
 	if (gameover) {
         DrawAlphabet((alphabets)6, 250, height-300, awidth, aheight);
 
@@ -592,7 +656,11 @@ void DisplayFunction() {
 		  locy=height-bradius;  
 	      	  speedy=-speedy;  
 		}
+<<<<<<< HEAD
 		for(int i=0;i<10;i++){
+=======
+		for(int i=0;i<5;i++){
+>>>>>>> 77d21ec46dc8b4978daaf8bfad93e1dba4879614
 		  int value=i*60+140;
 		  if (collisioncheck(locx,locy,bradius,height-value,alphabetGrid,i)) {
 	    		balancer(alphabetGrid,locx,locy);
@@ -604,6 +672,7 @@ void DisplayFunction() {
 	      		ballLaunched = false;  
 	      		ball = arr[globally%26];  
 	      		globally++;
+<<<<<<< HEAD
 	      		if(i==9){
 	      		gameover=true;
 	      		break;
@@ -612,6 +681,12 @@ void DisplayFunction() {
 		   }	
 		int deviation=120;
 		for(int j=0;j<10;j++){
+=======
+			}
+		}	
+		int deviation=120;
+		for(int j=0;j<5;j++){
+>>>>>>> 77d21ec46dc8b4978daaf8bfad93e1dba4879614
 			int x_s = 10;
 			for (int i = 0; i < 15; i++) {
 			int curr_height=height-deviation;
@@ -749,7 +824,11 @@ void PrintableKeys(unsigned char key, int x, int y) {
 void Timer(int m) {
   if(timee>0){
   timee--;
+<<<<<<< HEAD
     if(timee%10==0){
+=======
+  if(timee%10==0){
+>>>>>>> 77d21ec46dc8b4978daaf8bfad93e1dba4879614
     displaytime--;
     }
   }

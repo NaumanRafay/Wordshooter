@@ -130,7 +130,11 @@ Board::Board(int xsize, int ysize) {
 }
 
 void Board::Draw(void) {
+<<<<<<< HEAD
 	glColor3f(1, 1, 1);
+=======
+	glColor3f(0, 0, 1);
+>>>>>>> 77d21ec46dc8b4978daaf8bfad93e1dba4879614
 	glPushMatrix();
 //	glTranslatef(10, 10, 1);
 //	glScalef(2.5, 2.5, 1);
